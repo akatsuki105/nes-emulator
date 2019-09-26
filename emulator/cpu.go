@@ -80,6 +80,11 @@ func (cpu *CPU) FetchMemory8(addr uint) byte {
 	return value
 }
 
+// SetMemory8 引数で指定したアドレスにvalueを書き込む
+func (cpu *CPU) SetMemory8(addr uint, value byte) {
+	cpu.RAM[addr] = value
+}
+
 // Reset エミュレータをリセットする
 func (cpu *CPU) Reset() {
 	// TODO メモリの初期化
