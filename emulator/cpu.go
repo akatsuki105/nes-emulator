@@ -91,3 +91,39 @@ func (cpu *CPU) Reset() {
 	// TODO 画面の初期化
 	cpu.InitReg()
 }
+
+// FlagN Nフラグを立てるか判定する
+func (cpu *CPU) FlagN(b byte) {
+	if (b & 0x80) != 0 {
+		cpu.Reg.P = cpu.Reg.P | 0x80 // 0b1000_0000
+	} else {
+		cpu.Reg.P = cpu.Reg.P & 0x7f // 0b0111_1111
+	}
+}
+
+// FlagV Vフラグを立てるか判定する
+func (cpu *CPU) FlagV(b0, b1 byte, u16 uint16) {
+	if ((b0>>7)^(b1>>7) != 0) && (uint16(b1) != u16) {
+		cpu.Reg.P = cpu.Reg.P | 0x40 // 0b0100_0000
+	} else {
+		cpu.Reg.P = cpu.Reg.P & 0xbf // 0b1011_1111
+	}
+}
+
+// FlagZ Zフラグを立てるか判定する
+func (cpu *CPU) FlagZ(b byte) {
+	if b == 0 {
+		cpu.Reg.P = cpu.Reg.P | 0x02 // 0b0000_0010
+	} else {
+		cpu.Reg.P = cpu.Reg.P & 0xfd // 0b1111_1101
+	}
+}
+
+// FlagC Cフラグを立てるか判定する
+func (cpu *CPU) FlagC(u16 uint16) {
+	if (u16 >> 8) != 0 {
+		cpu.Reg.P = cpu.Reg.P | 0x01 // 0b0000_0001
+	} else {
+		cpu.Reg.P = cpu.Reg.P & 0xfe // 0b1111_1110
+	}
+}

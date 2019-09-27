@@ -28,12 +28,18 @@ func (cpu *CPU) STXZeroPage() {
 func (cpu *CPU) DEYImplied() {
 	cpu.Reg.Y--
 	cpu.Reg.PC++
+
+	cpu.FlagN(cpu.Reg.Y)
+	cpu.FlagZ(cpu.Reg.Y)
 }
 
 // TXAImplied 0x8a
 func (cpu *CPU) TXAImplied() {
 	cpu.Reg.A = cpu.Reg.X
 	cpu.Reg.PC++
+
+	cpu.FlagN(cpu.Reg.A)
+	cpu.FlagZ(cpu.Reg.A)
 }
 
 // STYAbsolute 0xc

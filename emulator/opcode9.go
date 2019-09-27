@@ -2,12 +2,11 @@ package emulator
 
 // BCCRelative 0x90: if C is 1, jump in relative mode.
 func (cpu *CPU) BCCRelative() {
+	addr := cpu.RelativeAddressing()
+
 	cFlag := uint8(cpu.Reg.P & 0x01)
-	addr := int8(cpu.Reg.PC) + 1 + int8(cpu.FetchCode8(1))
 	if cFlag == 0 {
 		cpu.Reg.PC = uint16(addr)
-	} else {
-		cpu.Reg.PC += 2
 	}
 }
 
@@ -39,6 +38,9 @@ func (cpu *CPU) STXZeroPageY() {
 func (cpu *CPU) TYAImplied() {
 	cpu.Reg.A = cpu.Reg.Y
 	cpu.Reg.PC++
+
+	cpu.FlagN(cpu.Reg.A)
+	cpu.FlagZ(cpu.Reg.A)
 }
 
 // STAAbsoluteY 0x99: Store A into M in AbsoluteY mode
@@ -51,6 +53,9 @@ func (cpu *CPU) STAAbsoluteY() {
 func (cpu *CPU) TXSImplied() {
 	cpu.Reg.S = cpu.Reg.X
 	cpu.Reg.PC++
+
+	cpu.FlagN(cpu.Reg.S)
+	cpu.FlagZ(cpu.Reg.S)
 }
 
 // STAAbsoluteX 0x9d: Store A into M in AbsoluteX mode

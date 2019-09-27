@@ -74,7 +74,7 @@ func (cpu *CPU) IndexedIndirectAddressing() (addr uint) {
 	return addr
 }
 
-// IndirectIndexedAddressing IndirectIndexedAddressingのアドレスを返す
+// IndirectIndexedAddressing IndirectIndexedのアドレスを返す
 func (cpu *CPU) IndirectIndexedAddressing() (addr uint) {
 	upper0 := uint16(0x00)
 	lower0 := uint16(cpu.FetchCode8(1))
@@ -84,6 +84,13 @@ func (cpu *CPU) IndirectIndexedAddressing() (addr uint) {
 	lower1 := uint16(cpu.FetchMemory8(uint(addr0 + 1)))
 	addr = uint((upper1 << 8) | (lower1) + uint16(cpu.Reg.Y))
 
+	cpu.Reg.PC += 2
+	return addr
+}
+
+// RelativeAddressing Relativeのアドレスを返す
+func (cpu *CPU) RelativeAddressing() (addr uint) {
+	addr = uint(int8(cpu.Reg.PC) + 1 + int8(cpu.FetchCode8(1)))
 	cpu.Reg.PC += 2
 	return addr
 }
