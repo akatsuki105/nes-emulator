@@ -4,9 +4,18 @@ package emulator
 func (cpu *CPU) AbsoluteAddressing() (addr uint) {
 	lower := uint16(cpu.FetchCode8(1))
 	upper := uint16(cpu.FetchCode8(2))
-	addr = uint((upper << 8) | (lower))
+	addr = uint((upper << 8) | lower)
 
 	cpu.Reg.PC += 3
+	return addr
+}
+
+// AbsoluteIndirectAddressing AbsoluteIndirectのアドレスを返す
+func (cpu *CPU) AbsoluteIndirectAddressing() (addr uint) {
+	addr = cpu.AbsoluteAddressing()
+	lower := uint16(cpu.FetchMemory8(addr))
+	upper := uint16(cpu.FetchMemory8(addr + 1))
+	addr = uint((upper << 8) | lower)
 	return addr
 }
 
@@ -14,7 +23,7 @@ func (cpu *CPU) AbsoluteAddressing() (addr uint) {
 func (cpu *CPU) AbsoluteXAddressing() (addr uint) {
 	lower := uint16(cpu.FetchCode8(1))
 	upper := uint16(cpu.FetchCode8(2))
-	addr = uint((upper << 8) | (lower) + uint16(cpu.Reg.X))
+	addr = uint((upper << 8) | (lower + uint16(cpu.Reg.X)))
 
 	cpu.Reg.PC += 3
 	return addr
@@ -24,7 +33,7 @@ func (cpu *CPU) AbsoluteXAddressing() (addr uint) {
 func (cpu *CPU) AbsoluteYAddressing() (addr uint) {
 	lower := uint16(cpu.FetchCode8(1))
 	upper := uint16(cpu.FetchCode8(2))
-	addr = uint((upper << 8) | (lower) + uint16(cpu.Reg.Y))
+	addr = uint((upper << 8) | (lower + uint16(cpu.Reg.Y)))
 
 	cpu.Reg.PC += 3
 	return addr
@@ -82,7 +91,7 @@ func (cpu *CPU) IndirectIndexedAddressing() (addr uint) {
 
 	upper1 := uint16(cpu.FetchMemory8(uint(addr0)))
 	lower1 := uint16(cpu.FetchMemory8(uint(addr0 + 1)))
-	addr = uint((upper1 << 8) | (lower1) + uint16(cpu.Reg.Y))
+	addr = uint((upper1 << 8) | (lower1 + uint16(cpu.Reg.Y)))
 
 	cpu.Reg.PC += 2
 	return addr

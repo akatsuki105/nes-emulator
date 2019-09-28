@@ -36,11 +36,8 @@ func (cpu *CPU) STXZeroPageY() {
 
 // TYAImplied 0x98: Transfer Y into A in Implied mode
 func (cpu *CPU) TYAImplied() {
-	cpu.Reg.A = cpu.Reg.Y
 	cpu.Reg.PC++
-
-	cpu.FlagN(cpu.Reg.A)
-	cpu.FlagZ(cpu.Reg.A)
+	cpu.TYA()
 }
 
 // STAAbsoluteY 0x99: Store A into M in AbsoluteY mode
