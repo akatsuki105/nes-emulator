@@ -30,6 +30,7 @@ func (cpu *CPU) RORZeroPageX() {
 
 // SEIImplied 0x78
 func (cpu *CPU) SEIImplied() {
+	cpu.Reg.PC++
 	cpu.Reg.P = cpu.Reg.P | 0x04
 }
 

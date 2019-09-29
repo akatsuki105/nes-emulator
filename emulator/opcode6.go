@@ -3,6 +3,7 @@ package emulator
 // RTSImplied 0x60: Return from Subroutine
 func (cpu *CPU) RTSImplied() {
 	// TODO: 実装
+	cpu.Reg.PC++
 }
 
 // ADCIndexedIndirect 0x61

@@ -36,8 +36,8 @@ func (cpu *CPU) LDXZeroPageY() {
 
 // CLVImplied 0xb8: Clear V flag
 func (cpu *CPU) CLVImplied() {
-	cpu.Reg.P = cpu.Reg.P & 0xbf // 0b1011_1111
 	cpu.Reg.PC++
+	cpu.Reg.P = cpu.Reg.P & 0xbf // 0b1011_1111
 }
 
 // LDAAbsoluteY 0xb9: Load into A in AbsoluteY mode

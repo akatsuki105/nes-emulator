@@ -4,8 +4,8 @@ package emulator
 func (cpu *CPU) BNERelative() {
 	addr := cpu.RelativeAddressing()
 
-	cFlag := uint8(cpu.Reg.P & 0x02)
-	if cFlag > 0 {
+	zFlag := uint8(cpu.Reg.P & 0x02)
+	if zFlag == 0 {
 		cpu.Reg.PC = uint16(addr) // jump
 	}
 }
@@ -30,8 +30,8 @@ func (cpu *CPU) DECZeroPageX() {
 
 // CLDImplied 0xc8: Clear D Flag
 func (cpu *CPU) CLDImplied() {
+	cpu.Reg.PC++
 	cpu.Reg.P = cpu.Reg.P & 0xfb // 0b1111_1011
-	cpu.Reg.P++
 }
 
 // CMPAbsoluteY 0xc9
