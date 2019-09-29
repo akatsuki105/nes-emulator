@@ -13,25 +13,25 @@ func (cpu *CPU) BCSRelative() {
 // LDAIndirectIndexed 0xb1: Load into A in Indirect Indexed mode(Y)
 func (cpu *CPU) LDAIndirectIndexed() {
 	addr := cpu.IndirectIndexedAddressing()
-	cpu.LDA(cpu.FetchMemory8(addr))
+	cpu.LDA(addr)
 }
 
 // LDYZeroPageX 0xb4: Load into Y in ZeroPageX mode
 func (cpu *CPU) LDYZeroPageX() {
 	addr := cpu.ZeroPageXAddressing()
-	cpu.LDY(cpu.FetchMemory8(addr))
+	cpu.LDY(addr)
 }
 
 // LDAZeroPageX 0xb5: Load into A in ZeroPageX mode
 func (cpu *CPU) LDAZeroPageX() {
 	addr := cpu.ZeroPageXAddressing()
-	cpu.LDA(cpu.FetchMemory8(addr))
+	cpu.LDA(addr)
 }
 
 // LDXZeroPageY 0xb6: Load into X in ZeroPageY mode
 func (cpu *CPU) LDXZeroPageY() {
 	addr := cpu.ZeroPageYAddressing()
-	cpu.LDX(cpu.FetchMemory8(addr))
+	cpu.LDX(addr)
 }
 
 // CLVImplied 0xb8: Clear V flag
@@ -43,7 +43,7 @@ func (cpu *CPU) CLVImplied() {
 // LDAAbsoluteY 0xb9: Load into A in AbsoluteY mode
 func (cpu *CPU) LDAAbsoluteY() {
 	addr := cpu.AbsoluteYAddressing()
-	cpu.LDA(cpu.FetchMemory8(addr))
+	cpu.LDA(addr)
 }
 
 // TSXImplied 0xba: Transfer S into X
@@ -55,17 +55,17 @@ func (cpu *CPU) TSXImplied() {
 // LDYAbsoluteX 0xbc: Load into Y in AbsoluteX mode
 func (cpu *CPU) LDYAbsoluteX() {
 	addr := cpu.AbsoluteXAddressing()
-	cpu.LDY(cpu.FetchMemory8(addr))
+	cpu.LDY(addr)
 }
 
 // LDAAbsoluteX 0xbd: Load into A in AbsoluteX mode
 func (cpu *CPU) LDAAbsoluteX() {
 	addr := cpu.AbsoluteXAddressing()
-	cpu.LDA(cpu.FetchMemory8(addr))
+	cpu.LDA(addr)
 }
 
 // LDXAbsoluteY 0xbe: Load into Y in AbsoluteY mode
 func (cpu *CPU) LDXAbsoluteY() {
 	addr := cpu.AbsoluteYAddressing()
-	cpu.LDX(cpu.FetchMemory8(addr))
+	cpu.LDX(addr)
 }

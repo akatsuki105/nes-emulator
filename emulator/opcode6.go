@@ -25,13 +25,18 @@ func (cpu *CPU) RORZeroPage() {
 
 // PLAImplied 0x68: Pull A from stack (stack -> A)
 func (cpu *CPU) PLAImplied() {
-	// TODO: 実装
+	value := cpu.FetchMemory8(0x0100 + uint(cpu.Reg.S))
+	cpu.Reg.A = value
+	cpu.Reg.S--
+	cpu.Reg.PC++
+
+	cpu.FlagN(value)
+	cpu.FlagZ(value)
 }
 
 // ADCImmediate 0x69
 func (cpu *CPU) ADCImmediate() {
-	addr := uint(cpu.Reg.PC + 1)
-	cpu.Reg.PC += 2
+	addr := cpu.ImmediateAddressing()
 	cpu.ADC(addr)
 }
 

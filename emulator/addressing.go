@@ -1,5 +1,13 @@
 package emulator
 
+// ImmediateAddressing Immediateのアドレスを返す
+func (cpu *CPU) ImmediateAddressing() (addr uint) {
+	addr = uint(cpu.Reg.PC + 1)
+
+	cpu.Reg.PC += 2
+	return addr
+}
+
 // AbsoluteAddressing Absoluteのアドレスを返す
 func (cpu *CPU) AbsoluteAddressing() (addr uint) {
 	lower := uint16(cpu.FetchCode8(1))

@@ -2,27 +2,26 @@ package emulator
 
 // CPYImmediate 0xc0: Compare (Y - M)
 func (cpu *CPU) CPYImmediate() {
-	immediate := cpu.FetchCode8(1)
-	cpu.Reg.PC += 2
-	cpu.CPY(immediate)
+	addr := cpu.ImmediateAddressing()
+	cpu.CPY(addr)
 }
 
 // CMPIndexedIndirect 0xc1: Compare (A - M)
 func (cpu *CPU) CMPIndexedIndirect() {
 	addr := cpu.IndexedIndirectAddressing()
-	cpu.CMP(cpu.FetchMemory8(addr))
+	cpu.CMP(addr)
 }
 
 // CPYZeroPage 0xc4: Compare (Y - M)
 func (cpu *CPU) CPYZeroPage() {
 	addr := cpu.ZeroPageAddressing()
-	cpu.CPY(cpu.FetchMemory8(addr))
+	cpu.CPY(addr)
 }
 
 // CMPZeroPage 0xc5: Compare (A - M)
 func (cpu *CPU) CMPZeroPage() {
 	addr := cpu.ZeroPageAddressing()
-	cpu.CMP(cpu.FetchMemory8(addr))
+	cpu.CMP(addr)
 }
 
 // DECZeroPage 0xc6
@@ -39,9 +38,8 @@ func (cpu *CPU) INYImplied() {
 
 // CMPImmediate 0xc9
 func (cpu *CPU) CMPImmediate() {
-	immediate := cpu.FetchCode8(1)
-	cpu.Reg.PC += 2
-	cpu.CMP(immediate)
+	addr := cpu.ImmediateAddressing()
+	cpu.CMP(addr)
 }
 
 // DEXImplied 0xca
@@ -53,13 +51,13 @@ func (cpu *CPU) DEXImplied() {
 // CPYAbsolute 0xcc
 func (cpu *CPU) CPYAbsolute() {
 	addr := cpu.AbsoluteAddressing()
-	cpu.CPY(cpu.FetchMemory8(addr))
+	cpu.CPY(addr)
 }
 
 // CMPAbsolute 0xcd
 func (cpu *CPU) CMPAbsolute() {
 	addr := cpu.AbsoluteAddressing()
-	cpu.CMP(cpu.FetchMemory8(addr))
+	cpu.CMP(addr)
 }
 
 // DECAbsolute 0xce
