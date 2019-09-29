@@ -1,22 +1,5 @@
 package emulator
 
-const (
-	// NMI0 NMI下位アドレス
-	NMI0 uint16 = 0xfffa
-	// NMI1 NMI上位アドレス
-	NMI1 uint16 = 0xfffb
-
-	// RESET0 RESET下位アドレス
-	RESET0 uint16 = 0xfffc
-	// RESET1 RESET上位アドレス
-	RESET1 uint16 = 0xfffd
-
-	// IRQBRK0 IRQ,BRQ下位アドレス
-	IRQBRK0 uint16 = 0xfffe
-	// IRQBRK1 IRQ,BRQ上位アドレス
-	IRQBRK1 uint16 = 0xffff
-)
-
 var (
 	// colors {R, G, B}
 	colors [64][3]uint8 = [64][3]uint8{

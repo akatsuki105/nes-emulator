@@ -1,5 +1,106 @@
 package emulator
 
+// ADC Add M to A with C (A + M + C -> A)
+func (cpu *CPU) ADC(addr uint) {
+	cFlag := cpu.Reg.P & 0x01
+	aFlag := cpu.Reg.A
+	value := (cpu.Reg.A + cpu.FetchMemory8(addr) + cFlag) & (0xff)                // キャリーオーバー対策のため
+	value16 := uint16(cpu.Reg.A) + uint16(cpu.FetchMemory8(addr)) + uint16(cFlag) // Cフラグ判定のため
+	cpu.Reg.A = value
+
+	cpu.FlagN(value)
+	cpu.FlagV(aFlag, value, value16)
+	cpu.FlagZ(value)
+	cpu.FlagC(value16)
+}
+
+// SBC Subtract M from A with C (A - M - not C -> A)
+func (cpu *CPU) SBC(addr uint) {
+	notCFlag := ^(cpu.Reg.P) & 0x01
+	aFlag := cpu.Reg.A
+	value := (cpu.Reg.A - cpu.FetchMemory8(addr) - notCFlag) & (0xff)                // キャリーオーバー対策のため
+	value16 := uint16(cpu.Reg.A) - uint16(cpu.FetchMemory8(addr)) - uint16(notCFlag) // Cフラグ判定のため
+	cpu.Reg.A = value
+
+	cpu.FlagN(value)
+	cpu.FlagV(aFlag, value, value16)
+	cpu.FlagZ(value)
+	cpu.FlagC(value16)
+}
+
+// AND "AND" M with A (A and M -> A)
+func (cpu *CPU) AND(addr uint) {
+	value := cpu.Reg.A & cpu.FetchMemory8(addr)
+	cpu.Reg.A = value
+
+	cpu.FlagN(value)
+	cpu.FlagZ(value)
+}
+
+// ORA "OR" M with A (A or M -> A)
+func (cpu *CPU) ORA(addr uint) {
+	value := cpu.Reg.A | cpu.FetchMemory8(addr)
+	cpu.Reg.A = value
+
+	cpu.FlagN(value)
+	cpu.FlagZ(value)
+}
+
+// EOR "Exclusive-OR" M with A (A eor M -> A)
+func (cpu *CPU) EOR(addr uint) {
+	value := cpu.Reg.A ^ cpu.FetchMemory8(addr)
+	cpu.Reg.A = value
+
+	cpu.FlagN(value)
+	cpu.FlagZ(value)
+}
+
+// ASL Arithmetic shift left one bit
+func (cpu *CPU) ASL(addr uint) {
+	value := cpu.FetchMemory8(addr)
+	cpu.Reg.P = cpu.Reg.P | ((value & 0x80) >> 7) // valueのbit7をcにセット
+	value = value << 1
+	value = value | 0 // valueのbit0に0をセット
+	cpu.SetMemory8(addr, value)
+	cpu.FlagN(value)
+	cpu.FlagZ(value)
+}
+
+// LSR Logical shift right one bit
+func (cpu *CPU) LSR(addr uint) {
+	value := cpu.FetchMemory8(addr)
+	cpu.Reg.P = cpu.Reg.P | (value & 0x01) // valueのbit0をcにセット
+	value = value >> 1
+	value = value | (0 << 7) // valueのbit7に0をセット
+	cpu.SetMemory8(addr, value)
+	cpu.FlagN(value)
+	cpu.FlagZ(value)
+}
+
+// ROL Rotate left one bit
+func (cpu *CPU) ROL(addr uint) {
+	value := cpu.FetchMemory8(addr)
+	cFlag := cpu.Reg.P & 0x01
+	cpu.Reg.P = cpu.Reg.P | ((value & 0x80) >> 7) // valueのbit7をcにセット
+	value = value << 1
+	value = value | cFlag // valueのbit0にcをセット
+	cpu.SetMemory8(addr, value)
+	cpu.FlagN(value)
+	cpu.FlagZ(value)
+}
+
+// ROR Rotate right one bit
+func (cpu *CPU) ROR(addr uint) {
+	value := cpu.FetchMemory8(addr)
+	cFlag := cpu.Reg.P & 0x01
+	cpu.Reg.P = cpu.Reg.P | (value & 0x01) // valueのbit0をcにセット
+	value = value >> 1
+	value = value | (cFlag << 7) // valueのbit7にcをセット
+	cpu.SetMemory8(addr, value)
+	cpu.FlagN(value)
+	cpu.FlagZ(value)
+}
+
 // NOP No operation
 func (cpu *CPU) NOP() {
 }
@@ -139,42 +240,17 @@ func (cpu *CPU) INY() {
 	cpu.FlagZ(cpu.Reg.Y)
 }
 
-// ROR Rotate right one bit
-func (cpu *CPU) ROR(addr uint) {
+// BIT Test Bits in M with A
+func (cpu *CPU) BIT(addr uint) {
 	value := cpu.FetchMemory8(addr)
-	cFlag := cpu.Reg.P & 0x01
-	cpu.Reg.P = cpu.Reg.P | (value & 0x01) // valueのbit0をcにセット
-	value = value >> 1
-	value = value | (cFlag << 7) // valueのbit7にcをセット
-	cpu.SetMemory8(addr, value)
+
+	// NZフラグを立てる
+	cpu.FlagZ(value & cpu.Reg.A)
 	cpu.FlagN(value)
-	cpu.FlagZ(value)
-}
-
-// ADC Add M to A with C (A + M + C -> A)
-func (cpu *CPU) ADC(addr uint) {
-	cFlag := cpu.Reg.P & 0x01
-	aFlag := cpu.Reg.A
-	value := (cpu.Reg.A + cpu.FetchMemory8(addr) + cFlag) & (0xff)                // キャリーオーバー対策のため
-	value16 := uint16(cpu.Reg.A) + uint16(cpu.FetchMemory8(addr)) + uint16(cFlag) // Cフラグ判定のため
-	cpu.Reg.A = value
-
-	cpu.FlagN(value)
-	cpu.FlagV(aFlag, value, value16)
-	cpu.FlagZ(value)
-	cpu.FlagC(value16)
-}
-
-// SBC Subtract M from A with C (A - M - not C -> A)
-func (cpu *CPU) SBC(addr uint) {
-	notCFlag := ^(cpu.Reg.P) & 0x01
-	aFlag := cpu.Reg.A
-	value := (cpu.Reg.A - cpu.FetchMemory8(addr) - notCFlag) & (0xff)                // キャリーオーバー対策のため
-	value16 := uint16(cpu.Reg.A) - uint16(cpu.FetchMemory8(addr)) - uint16(notCFlag) // Cフラグ判定のため
-	cpu.Reg.A = value
-
-	cpu.FlagN(value)
-	cpu.FlagV(aFlag, value, value16)
-	cpu.FlagZ(value)
-	cpu.FlagC(value16)
+	// bit6をVフラグに転送
+	if (value & 0x40) != 0 {
+		cpu.Reg.P = cpu.Reg.P | 0x40 // 0b0100_0000
+	} else {
+		cpu.Reg.P = cpu.Reg.P & 0xbf // 0b1011_1111
+	}
 }

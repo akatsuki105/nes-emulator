@@ -37,8 +37,8 @@ type CPURAM struct {
 
 // InitIRQVector 割り込みベクタの初期化
 func (cpu *CPU) InitIRQVector() {
-	cpu.RAM[RESET0] = 0x00
-	cpu.RAM[RESET1] = 0x80
+	cpu.RAM[0xfffc] = 0x00
+	cpu.RAM[0xfffd] = 0x80
 }
 
 // InitReg レジスタの初期化

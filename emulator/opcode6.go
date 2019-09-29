@@ -2,7 +2,11 @@ package emulator
 
 // RTSImplied 0x60: Return from Subroutine
 func (cpu *CPU) RTSImplied() {
-	// TODO: 実装
+	lower := uint16(cpu.FetchMemory8((0x100 + uint(cpu.Reg.S) - 1)))
+	cpu.Reg.S--
+	upper := uint16(cpu.FetchMemory8((0x100 + uint(cpu.Reg.S) - 1)))
+	cpu.Reg.S--
+	cpu.Reg.PC = (upper << 8) | lower
 	cpu.Reg.PC++
 }
 
@@ -26,7 +30,7 @@ func (cpu *CPU) RORZeroPage() {
 
 // PLAImplied 0x68: Pull A from stack (stack -> A)
 func (cpu *CPU) PLAImplied() {
-	value := cpu.FetchMemory8(0x0100 + uint(cpu.Reg.S))
+	value := cpu.FetchMemory8(0x0100 + uint(cpu.Reg.S) - 1)
 	cpu.Reg.A = value
 	cpu.Reg.S--
 	cpu.Reg.PC++
@@ -49,6 +53,8 @@ func (cpu *CPU) RORAccumulator() {
 	cpu.Reg.A = cpu.Reg.A | (cFlag << 7) // valueのbit7にcをセット
 	cpu.FlagN(cpu.Reg.A)
 	cpu.FlagZ(cpu.Reg.A)
+
+	cpu.Reg.PC++
 }
 
 // JMPAbsoluteIndirect 0x6c
