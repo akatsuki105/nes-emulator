@@ -1,7 +1,7 @@
 package emulator
 
 // ADC Add M to A with C (A + M + C -> A)
-func (cpu *CPU) ADC(addr uint) {
+func (cpu *CPU) ADC(addr uint16) {
 	cFlag := cpu.Reg.P & 0x01
 	aFlag := cpu.Reg.A
 	value := (cpu.Reg.A + cpu.FetchMemory8(addr) + cFlag) & (0xff)                // キャリーオーバー対策のため
@@ -15,7 +15,7 @@ func (cpu *CPU) ADC(addr uint) {
 }
 
 // SBC Subtract M from A with C (A - M - not C -> A)
-func (cpu *CPU) SBC(addr uint) {
+func (cpu *CPU) SBC(addr uint16) {
 	notCFlag := ^(cpu.Reg.P) & 0x01
 	aFlag := cpu.Reg.A
 	value := (cpu.Reg.A - cpu.FetchMemory8(addr) - notCFlag) & (0xff)                // キャリーオーバー対策のため
@@ -29,7 +29,7 @@ func (cpu *CPU) SBC(addr uint) {
 }
 
 // AND "AND" M with A (A and M -> A)
-func (cpu *CPU) AND(addr uint) {
+func (cpu *CPU) AND(addr uint16) {
 	value := cpu.Reg.A & cpu.FetchMemory8(addr)
 	cpu.Reg.A = value
 
@@ -38,7 +38,7 @@ func (cpu *CPU) AND(addr uint) {
 }
 
 // ORA "OR" M with A (A or M -> A)
-func (cpu *CPU) ORA(addr uint) {
+func (cpu *CPU) ORA(addr uint16) {
 	value := cpu.Reg.A | cpu.FetchMemory8(addr)
 	cpu.Reg.A = value
 
@@ -47,7 +47,7 @@ func (cpu *CPU) ORA(addr uint) {
 }
 
 // EOR "Exclusive-OR" M with A (A eor M -> A)
-func (cpu *CPU) EOR(addr uint) {
+func (cpu *CPU) EOR(addr uint16) {
 	value := cpu.Reg.A ^ cpu.FetchMemory8(addr)
 	cpu.Reg.A = value
 
@@ -56,7 +56,7 @@ func (cpu *CPU) EOR(addr uint) {
 }
 
 // ASL Arithmetic shift left one bit
-func (cpu *CPU) ASL(addr uint) {
+func (cpu *CPU) ASL(addr uint16) {
 	value := cpu.FetchMemory8(addr)
 	cpu.Reg.P = cpu.Reg.P | ((value & 0x80) >> 7) // valueのbit7をcにセット
 	value = value << 1
@@ -67,7 +67,7 @@ func (cpu *CPU) ASL(addr uint) {
 }
 
 // LSR Logical shift right one bit
-func (cpu *CPU) LSR(addr uint) {
+func (cpu *CPU) LSR(addr uint16) {
 	value := cpu.FetchMemory8(addr)
 	cpu.Reg.P = cpu.Reg.P | (value & 0x01) // valueのbit0をcにセット
 	value = value >> 1
@@ -78,7 +78,7 @@ func (cpu *CPU) LSR(addr uint) {
 }
 
 // ROL Rotate left one bit
-func (cpu *CPU) ROL(addr uint) {
+func (cpu *CPU) ROL(addr uint16) {
 	value := cpu.FetchMemory8(addr)
 	cFlag := cpu.Reg.P & 0x01
 	cpu.Reg.P = cpu.Reg.P | ((value & 0x80) >> 7) // valueのbit7をcにセット
@@ -90,7 +90,7 @@ func (cpu *CPU) ROL(addr uint) {
 }
 
 // ROR Rotate right one bit
-func (cpu *CPU) ROR(addr uint) {
+func (cpu *CPU) ROR(addr uint16) {
 	value := cpu.FetchMemory8(addr)
 	cFlag := cpu.Reg.P & 0x01
 	cpu.Reg.P = cpu.Reg.P | (value & 0x01) // valueのbit0をcにセット
@@ -106,7 +106,7 @@ func (cpu *CPU) NOP() {
 }
 
 // CMP Compare M and A (A - M)
-func (cpu *CPU) CMP(addr uint) {
+func (cpu *CPU) CMP(addr uint16) {
 	value := cpu.Reg.A - cpu.FetchMemory8(addr)
 	value16 := uint16(cpu.Reg.A) - uint16(cpu.FetchMemory8(addr))
 
@@ -116,7 +116,7 @@ func (cpu *CPU) CMP(addr uint) {
 }
 
 // CPX Compare M and X (X - M)
-func (cpu *CPU) CPX(addr uint) {
+func (cpu *CPU) CPX(addr uint16) {
 	value := cpu.Reg.X - cpu.FetchMemory8(addr)
 	value16 := uint16(cpu.Reg.X) - uint16(cpu.FetchMemory8(addr))
 
@@ -126,7 +126,7 @@ func (cpu *CPU) CPX(addr uint) {
 }
 
 // CPY Compare M and Y (Y - M)
-func (cpu *CPU) CPY(addr uint) {
+func (cpu *CPU) CPY(addr uint16) {
 	value := cpu.Reg.Y - cpu.FetchMemory8(addr)
 	value16 := uint16(cpu.Reg.Y) - uint16(cpu.FetchMemory8(addr))
 
@@ -136,7 +136,7 @@ func (cpu *CPU) CPY(addr uint) {
 }
 
 // INC Increment M by one (M + 1 -> M)
-func (cpu *CPU) INC(addr uint) {
+func (cpu *CPU) INC(addr uint16) {
 	value := cpu.FetchMemory8(addr) + 1
 	cpu.SetMemory8(addr, value)
 
@@ -145,7 +145,7 @@ func (cpu *CPU) INC(addr uint) {
 }
 
 // DEC Decrement M by one (M - 1 -> M)
-func (cpu *CPU) DEC(addr uint) {
+func (cpu *CPU) DEC(addr uint16) {
 	value := cpu.FetchMemory8(addr) - 1
 	cpu.SetMemory8(addr, value)
 
@@ -175,7 +175,7 @@ func (cpu *CPU) DEY() {
 }
 
 // LDA Load A from M (M -> A)
-func (cpu *CPU) LDA(addr uint) {
+func (cpu *CPU) LDA(addr uint16) {
 	cpu.Reg.A = cpu.FetchMemory8(addr)
 
 	cpu.FlagN(cpu.FetchMemory8(addr))
@@ -183,7 +183,7 @@ func (cpu *CPU) LDA(addr uint) {
 }
 
 // LDX Load X from M (M -> X)
-func (cpu *CPU) LDX(addr uint) {
+func (cpu *CPU) LDX(addr uint16) {
 	cpu.Reg.X = cpu.FetchMemory8(addr)
 
 	cpu.FlagN(cpu.FetchMemory8(addr))
@@ -191,7 +191,7 @@ func (cpu *CPU) LDX(addr uint) {
 }
 
 // LDY Load Y from M (M -> Y)
-func (cpu *CPU) LDY(addr uint) {
+func (cpu *CPU) LDY(addr uint16) {
 	cpu.Reg.Y = cpu.FetchMemory8(addr)
 
 	cpu.FlagN(cpu.FetchMemory8(addr))
@@ -241,7 +241,7 @@ func (cpu *CPU) INY() {
 }
 
 // BIT Test Bits in M with A
-func (cpu *CPU) BIT(addr uint) {
+func (cpu *CPU) BIT(addr uint16) {
 	value := cpu.FetchMemory8(addr)
 
 	// NZフラグを立てる

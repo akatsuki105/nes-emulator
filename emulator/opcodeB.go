@@ -6,7 +6,7 @@ func (cpu *CPU) BCSRelative() {
 
 	cFlag := uint8(cpu.Reg.P & 0x01)
 	if cFlag > 0 {
-		cpu.Reg.PC = uint16(addr) // jump
+		cpu.Reg.PC = addr
 	}
 }
 

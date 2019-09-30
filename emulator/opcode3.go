@@ -6,7 +6,7 @@ func (cpu *CPU) BMIRelative() {
 
 	nFlag := uint8(cpu.Reg.P & 0x80)
 	if nFlag > 0 {
-		cpu.Reg.PC = uint16(addr)
+		cpu.Reg.PC = addr
 	}
 }
 

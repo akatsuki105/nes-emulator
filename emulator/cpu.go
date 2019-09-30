@@ -17,9 +17,10 @@ type cpuRegister struct {
 
 // CPU Central Processing Unit
 type CPU struct {
-	Reg    cpuRegister
-	RAM    [0x10000]byte
-	PPURAM [0x4000]byte
+	Reg     cpuRegister
+	RAM     [0x10000]byte
+	VRAM    [0x4000]byte
+	VRAMptr uint16 // VRAMのポインタ 0x2006に書き込まれたとき更新される
 }
 
 // CPURAM CPUからアクセスできるメモリマップ
@@ -65,7 +66,7 @@ func (cpu *CPU) LoadROM(rom []byte) {
 
 	// キャラクタROMをPPUの0x0000~に配置
 	for i := 0; i < len(chrBytes); i++ {
-		cpu.PPURAM[i] = chrBytes[i]
+		cpu.VRAM[i] = chrBytes[i]
 	}
 }
 
@@ -76,13 +77,13 @@ func (cpu *CPU) FetchCode8(index uint) byte {
 }
 
 // FetchMemory8 引数で指定したアドレスから値を取得する
-func (cpu *CPU) FetchMemory8(addr uint) byte {
+func (cpu *CPU) FetchMemory8(addr uint16) byte {
 	value := cpu.RAM[addr]
 	return value
 }
 
 // SetMemory8 引数で指定したアドレスにvalueを書き込む
-func (cpu *CPU) SetMemory8(addr uint, value byte) {
+func (cpu *CPU) SetMemory8(addr uint16, value byte) {
 	cpu.RAM[addr] = value
 }
 

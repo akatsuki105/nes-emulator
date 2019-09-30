@@ -5,10 +5,10 @@ func (cpu *CPU) JSRAbsolute() {
 	addr := cpu.AbsoluteAddressing()
 	upper := byte((cpu.Reg.PC - 1) >> 8)
 	lower := byte((cpu.Reg.PC - 1))
-	cpu.SetMemory8((0x100 + uint(cpu.Reg.S)), upper)
-	cpu.SetMemory8((0x100 + uint(cpu.Reg.S) + 1), lower)
+	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), upper)
+	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 1), lower)
 	cpu.Reg.S += 2
-	cpu.Reg.PC = uint16(addr)
+	cpu.Reg.PC = addr
 }
 
 // ANDIndexedIndirect 0x21
@@ -37,7 +37,7 @@ func (cpu *CPU) ROLZeroPage() {
 
 // PLPImplied 0x28: Pull P from stack (stack -> P)
 func (cpu *CPU) PLPImplied() {
-	value := cpu.FetchMemory8(0x0100 + uint(cpu.Reg.S) - 1)
+	value := cpu.FetchMemory8(0x0100 + uint16(cpu.Reg.S) - 1)
 	cpu.Reg.P = value // pullがフラグのセットになっている
 	cpu.Reg.S--
 	cpu.Reg.PC++

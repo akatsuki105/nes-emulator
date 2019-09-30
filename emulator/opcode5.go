@@ -6,7 +6,7 @@ func (cpu *CPU) BVCRelative() {
 
 	vFlag := uint8(cpu.Reg.P & 0x40)
 	if vFlag == 0 {
-		cpu.Reg.PC = uint16(addr)
+		cpu.Reg.PC = addr
 	}
 }
 

@@ -12,9 +12,9 @@ func (cpu *CPU) BRKImplied() {
 		// push PC & SR
 		upper0 := byte((cpu.Reg.PC) >> 8)
 		lower0 := byte((cpu.Reg.PC))
-		cpu.SetMemory8((0x100 + uint(cpu.Reg.S)), upper0)
-		cpu.SetMemory8((0x100 + uint(cpu.Reg.S) + 1), lower0)
-		cpu.SetMemory8((0x100 + uint(cpu.Reg.S) + 2), cpu.Reg.P)
+		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), upper0)
+		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 1), lower0)
+		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 2), cpu.Reg.P)
 		cpu.Reg.S += 3
 
 		cpu.Reg.P = cpu.Reg.P | 0x04 // set I Flag
@@ -45,7 +45,7 @@ func (cpu *CPU) ASLZeroPage() {
 
 // PHPImplied 0x08
 func (cpu *CPU) PHPImplied() {
-	cpu.SetMemory8((0x100 + uint(cpu.Reg.S)), cpu.Reg.P)
+	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), cpu.Reg.P)
 	cpu.Reg.S++
 	cpu.Reg.PC++
 }

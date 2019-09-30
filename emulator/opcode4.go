@@ -3,13 +3,13 @@ package emulator
 // RTIImplied 0x40: Return from Interrupt
 func (cpu *CPU) RTIImplied() {
 	// ステータスレジスタをpop
-	SR := cpu.FetchMemory8((0x100 + uint(cpu.Reg.S) - 1))
+	SR := cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1))
 	cpu.Reg.S--
 	cpu.Reg.P = SR
 	// PCをpop
-	lower := uint16(cpu.FetchMemory8((0x100 + uint(cpu.Reg.S) - 1)))
+	lower := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
 	cpu.Reg.S--
-	upper := uint16(cpu.FetchMemory8((0x100 + uint(cpu.Reg.S) - 1)))
+	upper := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
 	cpu.Reg.S--
 	cpu.Reg.PC = (upper << 8) | lower // ここでPCにリターンしているかつ割り込みなのでインクリメントは必要ない
 }
@@ -34,7 +34,7 @@ func (cpu *CPU) LSRZeroPage() {
 
 // PHAImplied 0x48
 func (cpu *CPU) PHAImplied() {
-	cpu.SetMemory8((0x100 + uint(cpu.Reg.S)), cpu.Reg.A)
+	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), cpu.Reg.A)
 	cpu.Reg.S++
 	cpu.Reg.PC++
 }
@@ -59,7 +59,7 @@ func (cpu *CPU) LSRAccumulator() {
 // JMPAbsolute 0x4c
 func (cpu *CPU) JMPAbsolute() {
 	addr := cpu.AbsoluteAddressing()
-	cpu.Reg.PC = uint16(addr)
+	cpu.Reg.PC = addr
 }
 
 // EORAbsolute 0x4d

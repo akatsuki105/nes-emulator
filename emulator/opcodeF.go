@@ -6,7 +6,7 @@ func (cpu *CPU) BEQRelative() {
 
 	zFlag := uint8(cpu.Reg.P & 0x02)
 	if zFlag > 0 {
-		cpu.Reg.PC = uint16(addr) // jump
+		cpu.Reg.PC = addr
 	}
 }
 
