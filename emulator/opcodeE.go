@@ -32,8 +32,8 @@ func (cpu *CPU) INCZeroPage() {
 
 // INXImplied 0xe8
 func (cpu *CPU) INXImplied() {
-	cpu.Reg.PC++
-	cpu.INX()
+	addr := cpu.ImpliedAddressing()
+	cpu.INX(addr)
 }
 
 // SBCImmediate 0xe9
@@ -44,7 +44,8 @@ func (cpu *CPU) SBCImmediate() {
 
 // NOPImplied 0xea
 func (cpu *CPU) NOPImplied() {
-	cpu.Reg.PC++
+	addr := cpu.ImpliedAddressing()
+	cpu.NOP(addr)
 }
 
 // CPXAbsolute 0xec

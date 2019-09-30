@@ -3,53 +3,53 @@ package emulator
 // STAIndexedIndirect 0x81
 func (cpu *CPU) STAIndexedIndirect() {
 	addr := cpu.IndexedIndirectAddressing()
-	cpu.SetMemory8(addr, cpu.Reg.A)
+	cpu.STA(addr)
 }
 
 // STYZeroPage 0x84
 func (cpu *CPU) STYZeroPage() {
 	addr := cpu.ZeroPageAddressing()
-	cpu.SetMemory8(addr, cpu.Reg.Y)
+	cpu.STY(addr)
 }
 
 // STAZeroPage 0x85
 func (cpu *CPU) STAZeroPage() {
 	addr := cpu.ZeroPageAddressing()
-	cpu.SetMemory8(addr, cpu.Reg.A)
+	cpu.STA(addr)
 }
 
 // STXZeroPage 0x86
 func (cpu *CPU) STXZeroPage() {
 	addr := cpu.ZeroPageAddressing()
-	cpu.SetMemory8(addr, cpu.Reg.X)
+	cpu.STX(addr)
 }
 
 // DEYImplied 0x88
 func (cpu *CPU) DEYImplied() {
-	cpu.Reg.PC++
-	cpu.DEY()
+	addr := cpu.ImpliedAddressing()
+	cpu.DEY(addr)
 }
 
 // TXAImplied 0x8a
 func (cpu *CPU) TXAImplied() {
-	cpu.Reg.PC++
-	cpu.TXA()
+	addr := cpu.ImpliedAddressing()
+	cpu.TXA(addr)
 }
 
 // STYAbsolute 0xc
 func (cpu *CPU) STYAbsolute() {
 	addr := cpu.AbsoluteAddressing()
-	cpu.SetMemory8(addr, cpu.Reg.Y)
+	cpu.STY(addr)
 }
 
 // STAAbsolute 0xd
 func (cpu *CPU) STAAbsolute() {
 	addr := cpu.AbsoluteAddressing()
-	cpu.SetMemory8(addr, cpu.Reg.A)
+	cpu.STA(addr)
 }
 
 // STXAbsolute 0xe
 func (cpu *CPU) STXAbsolute() {
 	addr := cpu.AbsoluteAddressing()
-	cpu.SetMemory8(addr, cpu.Reg.X)
+	cpu.STX(addr)
 }

@@ -3,12 +3,7 @@ package emulator
 // JSRAbsolute 0x20: Jump to new location saving return address
 func (cpu *CPU) JSRAbsolute() {
 	addr := cpu.AbsoluteAddressing()
-	upper := byte((cpu.Reg.PC - 1) >> 8)
-	lower := byte((cpu.Reg.PC - 1))
-	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), upper)
-	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 1), lower)
-	cpu.Reg.S += 2
-	cpu.Reg.PC = addr
+	cpu.JSR(addr)
 }
 
 // ANDIndexedIndirect 0x21
@@ -37,10 +32,8 @@ func (cpu *CPU) ROLZeroPage() {
 
 // PLPImplied 0x28: Pull P from stack (stack -> P)
 func (cpu *CPU) PLPImplied() {
-	value := cpu.FetchMemory8(0x0100 + uint16(cpu.Reg.S) - 1)
-	cpu.Reg.P = value // pullがフラグのセットになっている
-	cpu.Reg.S--
-	cpu.Reg.PC++
+	addr := cpu.ImpliedAddressing()
+	cpu.PLP(addr)
 }
 
 // ANDImmediate 0x29
@@ -51,14 +44,8 @@ func (cpu *CPU) ANDImmediate() {
 
 // ROLAccumulator 0x2a
 func (cpu *CPU) ROLAccumulator() {
-	cFlag := cpu.Reg.P & 0x01
-	cpu.Reg.P = cpu.Reg.P | ((cpu.Reg.A & 0x80) >> 7) // Aのbit7をcにセット
-	cpu.Reg.A = cpu.Reg.A << 1
-	cpu.Reg.A = cpu.Reg.A | cFlag // Aのbit0にcをセット
-	cpu.FlagN(cpu.Reg.A)
-	cpu.FlagZ(cpu.Reg.A)
-
-	cpu.Reg.PC++
+	addr := cpu.AccumulatorAddressing()
+	cpu.ROL(addr)
 }
 
 // BITAbsolute 0x2c

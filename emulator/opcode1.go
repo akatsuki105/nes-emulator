@@ -3,11 +3,7 @@ package emulator
 // BPLRelative 0x10
 func (cpu *CPU) BPLRelative() {
 	addr := cpu.RelativeAddressing()
-
-	nFlag := uint8(cpu.Reg.P & 0x80)
-	if nFlag == 0 {
-		cpu.Reg.PC = addr
-	}
+	cpu.BPL(addr)
 }
 
 // ORAIndirectIndexed 0x11
@@ -30,8 +26,8 @@ func (cpu *CPU) ASLZeroPageX() {
 
 // CLCImplied 0x18
 func (cpu *CPU) CLCImplied() {
-	cpu.Reg.P = cpu.Reg.P & 0xfe
-	cpu.Reg.PC++
+	addr := cpu.ImpliedAddressing()
+	cpu.CLC(addr)
 }
 
 // ORAAbsoluteY 0x19

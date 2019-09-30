@@ -1,5 +1,17 @@
 package emulator
 
+// ImpliedAddressing Impliedのアドレスを返す
+func (cpu *CPU) ImpliedAddressing() (addr uint16) {
+	cpu.Reg.PC++
+	return null
+}
+
+// AccumulatorAddressing Accumulatorのアドレスを返す
+func (cpu *CPU) AccumulatorAddressing() (addr uint16) {
+	cpu.Reg.PC++
+	return null
+}
+
 // ImmediateAddressing Immediateのアドレスを返す
 func (cpu *CPU) ImmediateAddressing() (addr uint16) {
 	addr = cpu.Reg.PC + 1

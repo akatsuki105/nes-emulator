@@ -3,11 +3,7 @@ package emulator
 // BVCRelative 0x50
 func (cpu *CPU) BVCRelative() {
 	addr := cpu.RelativeAddressing()
-
-	vFlag := uint8(cpu.Reg.P & 0x40)
-	if vFlag == 0 {
-		cpu.Reg.PC = addr
-	}
+	cpu.BVC(addr)
 }
 
 // EORIndirectIndexed 0x51
@@ -30,8 +26,8 @@ func (cpu *CPU) LSRZeroPageX() {
 
 // CLIImplied 0x58
 func (cpu *CPU) CLIImplied() {
-	cpu.Reg.PC++
-	cpu.Reg.P = cpu.Reg.P & 0xfb // 0b11111011
+	addr := cpu.ImpliedAddressing()
+	cpu.CLI(addr)
 }
 
 // EORAbsoluteY 0x59

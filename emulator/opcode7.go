@@ -3,11 +3,7 @@ package emulator
 // BVSRelative 0x70
 func (cpu *CPU) BVSRelative() {
 	addr := cpu.RelativeAddressing()
-
-	vFlag := uint8(cpu.Reg.P & 0x40)
-	if vFlag > 0 {
-		cpu.Reg.PC = addr
-	}
+	cpu.BVS(addr)
 }
 
 // ADCIndirectIndexed 0x71
@@ -30,8 +26,8 @@ func (cpu *CPU) RORZeroPageX() {
 
 // SEIImplied 0x78
 func (cpu *CPU) SEIImplied() {
-	cpu.Reg.PC++
-	cpu.Reg.P = cpu.Reg.P | 0x04
+	addr := cpu.ImpliedAddressing()
+	cpu.SEI(addr)
 }
 
 // ADCAbsoluteY 0x79

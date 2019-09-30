@@ -2,12 +2,8 @@ package emulator
 
 // RTSImplied 0x60: Return from Subroutine
 func (cpu *CPU) RTSImplied() {
-	lower := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
-	cpu.Reg.S--
-	upper := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
-	cpu.Reg.S--
-	cpu.Reg.PC = (upper << 8) | lower
-	cpu.Reg.PC++
+	addr := cpu.ImpliedAddressing()
+	cpu.RTS(addr)
 }
 
 // ADCIndexedIndirect 0x61
@@ -30,13 +26,8 @@ func (cpu *CPU) RORZeroPage() {
 
 // PLAImplied 0x68: Pull A from stack (stack -> A)
 func (cpu *CPU) PLAImplied() {
-	value := cpu.FetchMemory8(0x0100 + uint16(cpu.Reg.S) - 1)
-	cpu.Reg.A = value
-	cpu.Reg.S--
-	cpu.Reg.PC++
-
-	cpu.FlagN(value)
-	cpu.FlagZ(value)
+	addr := cpu.ImpliedAddressing()
+	cpu.PLA(addr)
 }
 
 // ADCImmediate 0x69
@@ -47,20 +38,14 @@ func (cpu *CPU) ADCImmediate() {
 
 // RORAccumulator 0x6a
 func (cpu *CPU) RORAccumulator() {
-	cFlag := cpu.Reg.P & 0x01
-	cpu.Reg.P = cpu.Reg.P | (cpu.Reg.A & 0x01) // valueのbit0をcにセット
-	cpu.Reg.A = cpu.Reg.A >> 1
-	cpu.Reg.A = cpu.Reg.A | (cFlag << 7) // valueのbit7にcをセット
-	cpu.FlagN(cpu.Reg.A)
-	cpu.FlagZ(cpu.Reg.A)
-
-	cpu.Reg.PC++
+	addr := cpu.AccumulatorAddressing()
+	cpu.ROR(addr)
 }
 
 // JMPAbsoluteIndirect 0x6c
 func (cpu *CPU) JMPAbsoluteIndirect() {
 	addr := cpu.AbsoluteIndirectAddressing()
-	cpu.Reg.PC = uint16(addr)
+	cpu.JMP(addr)
 }
 
 // ADCAbsolute 0x6d

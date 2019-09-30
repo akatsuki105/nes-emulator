@@ -3,11 +3,7 @@ package emulator
 // BCSRelative 0xb0: if C is 1, jump in relative mode.
 func (cpu *CPU) BCSRelative() {
 	addr := cpu.RelativeAddressing()
-
-	cFlag := uint8(cpu.Reg.P & 0x01)
-	if cFlag > 0 {
-		cpu.Reg.PC = addr
-	}
+	cpu.BCS(addr)
 }
 
 // LDAIndirectIndexed 0xb1: Load into A in Indirect Indexed mode(Y)
@@ -36,8 +32,8 @@ func (cpu *CPU) LDXZeroPageY() {
 
 // CLVImplied 0xb8: Clear V flag
 func (cpu *CPU) CLVImplied() {
-	cpu.Reg.PC++
-	cpu.Reg.P = cpu.Reg.P & 0xbf // 0b1011_1111
+	addr := cpu.ImpliedAddressing()
+	cpu.CLV(addr)
 }
 
 // LDAAbsoluteY 0xb9: Load into A in AbsoluteY mode
@@ -48,8 +44,8 @@ func (cpu *CPU) LDAAbsoluteY() {
 
 // TSXImplied 0xba: Transfer S into X
 func (cpu *CPU) TSXImplied() {
-	cpu.Reg.PC++
-	cpu.TSX()
+	addr := cpu.ImpliedAddressing()
+	cpu.TSX(addr)
 }
 
 // LDYAbsoluteX 0xbc: Load into Y in AbsoluteX mode

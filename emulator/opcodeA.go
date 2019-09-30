@@ -38,8 +38,8 @@ func (cpu *CPU) LDXZeroPage() {
 
 // TAYImplied 0xa8: Transfer A into Y in implied mode
 func (cpu *CPU) TAYImplied() {
-	cpu.Reg.PC++
-	cpu.TAY()
+	addr := cpu.ImpliedAddressing()
+	cpu.TAY(addr)
 }
 
 // LDAImmediate 0xa9: Load into A in Immediate mode
@@ -50,8 +50,8 @@ func (cpu *CPU) LDAImmediate() {
 
 // TAXImplied 0xaa: Transfer A into X in implied mode
 func (cpu *CPU) TAXImplied() {
-	cpu.Reg.PC++
-	cpu.TAX()
+	addr := cpu.ImpliedAddressing()
+	cpu.TAX(addr)
 }
 
 // LDYAbsolute 0xac: Load into Y in Absolute mode

@@ -2,16 +2,8 @@ package emulator
 
 // RTIImplied 0x40: Return from Interrupt
 func (cpu *CPU) RTIImplied() {
-	// ステータスレジスタをpop
-	SR := cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1))
-	cpu.Reg.S--
-	cpu.Reg.P = SR
-	// PCをpop
-	lower := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
-	cpu.Reg.S--
-	upper := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
-	cpu.Reg.S--
-	cpu.Reg.PC = (upper << 8) | lower // ここでPCにリターンしているかつ割り込みなのでインクリメントは必要ない
+	addr := cpu.ImpliedAddressing()
+	cpu.RTI(addr)
 }
 
 // EORIndexedIndirect 0x41
@@ -34,9 +26,8 @@ func (cpu *CPU) LSRZeroPage() {
 
 // PHAImplied 0x48
 func (cpu *CPU) PHAImplied() {
-	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), cpu.Reg.A)
-	cpu.Reg.S++
-	cpu.Reg.PC++
+	addr := cpu.ImpliedAddressing()
+	cpu.PHA(addr)
 }
 
 // EORImmediate 0x49
@@ -47,19 +38,14 @@ func (cpu *CPU) EORImmediate() {
 
 // LSRAccumulator 0x4a
 func (cpu *CPU) LSRAccumulator() {
-	cpu.Reg.P = cpu.Reg.P | (cpu.Reg.A & 0x01) // Aのbit0をcにセット
-	cpu.Reg.A = cpu.Reg.A >> 1
-	cpu.Reg.A = cpu.Reg.A | (0 << 7) // Aのbit7に0をセット
-	cpu.FlagN(cpu.Reg.A)
-	cpu.FlagZ(cpu.Reg.A)
-
-	cpu.Reg.PC++
+	addr := cpu.AccumulatorAddressing()
+	cpu.LSR(addr)
 }
 
 // JMPAbsolute 0x4c
 func (cpu *CPU) JMPAbsolute() {
 	addr := cpu.AbsoluteAddressing()
-	cpu.Reg.PC = addr
+	cpu.JMP(addr)
 }
 
 // EORAbsolute 0x4d

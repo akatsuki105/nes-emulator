@@ -23,19 +23,6 @@ type CPU struct {
 	VRAMptr uint16 // VRAMのポインタ 0x2006に書き込まれたとき更新される
 }
 
-// CPURAM CPUからアクセスできるメモリマップ
-type CPURAM struct {
-	wRAM         [0x0800]byte // 0x0000-0x07FF
-	wRAMMirror   [0x1800]byte // 0x0800-0x1FFF
-	ppuReg       [0x0008]byte // 0x2000-0x2007
-	ppuRegMirror [0x1ff8]byte // 0x2008-0x3FFF
-	apu          [0x0020]byte // 0x4000-0x401F
-	exROM        [0x1fe0]byte // 0x4020-0x5FFF
-	exRAM        [0x2000]byte // 0x6000-0x7FFF
-	prgROM0      [0x4000]byte // 0x8000-0xBFFF
-	prgROM1      [0x4000]byte // 0xC000-0xFFFF
-}
-
 // InitIRQVector 割り込みベクタの初期化
 func (cpu *CPU) InitIRQVector() {
 	cpu.RAM[0xfffc] = 0x00

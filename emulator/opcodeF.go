@@ -3,11 +3,7 @@ package emulator
 // BEQRelative 0xf0
 func (cpu *CPU) BEQRelative() {
 	addr := cpu.RelativeAddressing()
-
-	zFlag := uint8(cpu.Reg.P & 0x02)
-	if zFlag > 0 {
-		cpu.Reg.PC = addr
-	}
+	cpu.BEQ(addr)
 }
 
 // SBCIndirectIndexed 0xf1
@@ -30,8 +26,8 @@ func (cpu *CPU) INCZeroPageX() {
 
 // SEDImplied 0xf8: Set Decimal mode
 func (cpu *CPU) SEDImplied() {
-	cpu.Reg.PC++
-	cpu.Reg.P = cpu.Reg.P | 0x08
+	addr := cpu.ImpliedAddressing()
+	cpu.SED(addr)
 }
 
 // SBCAbsoluteY 0xf9

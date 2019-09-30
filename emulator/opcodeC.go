@@ -32,8 +32,8 @@ func (cpu *CPU) DECZeroPage() {
 
 // INYImplied 0xc8
 func (cpu *CPU) INYImplied() {
-	cpu.Reg.PC++
-	cpu.INY()
+	addr := cpu.ImpliedAddressing()
+	cpu.INY(addr)
 }
 
 // CMPImmediate 0xc9
@@ -44,8 +44,8 @@ func (cpu *CPU) CMPImmediate() {
 
 // DEXImplied 0xca
 func (cpu *CPU) DEXImplied() {
-	cpu.Reg.PC++
-	cpu.DEX()
+	addr := cpu.ImpliedAddressing()
+	cpu.DEX(addr)
 }
 
 // CPYAbsolute 0xcc

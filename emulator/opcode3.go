@@ -3,11 +3,7 @@ package emulator
 // BMIRelative 0x30
 func (cpu *CPU) BMIRelative() {
 	addr := cpu.RelativeAddressing()
-
-	nFlag := uint8(cpu.Reg.P & 0x80)
-	if nFlag > 0 {
-		cpu.Reg.PC = addr
-	}
+	cpu.BMI(addr)
 }
 
 // ANDIndirectIndexed 0x31
@@ -30,8 +26,8 @@ func (cpu *CPU) ROLZeroPageX() {
 
 // SECImplied 0x38: Set C flag
 func (cpu *CPU) SECImplied() {
-	cpu.Reg.P = cpu.Reg.P | 0x01
-	cpu.Reg.PC++
+	addr := cpu.ImpliedAddressing()
+	cpu.SEC(addr)
 }
 
 // ANDAbsoluteY 0x39
