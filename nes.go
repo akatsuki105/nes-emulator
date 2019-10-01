@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 
 	"./emulator"
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 )
 
 func main() {
@@ -14,6 +16,23 @@ func main() {
 	cpu := &emulator.CPU{}
 	cpu.InitReg()
 	cpu.LoadROM(bytes)
+
+}
+
+func render() {
+	cfg := pixelgl.WindowConfig{
+		Title:  "nes-emulator",
+		Bounds: pixel.R(0, 0, 256, 240),
+		VSync:  true,
+	}
+	win, err := pixelgl.NewWindow(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	for !win.Closed() {
+		win.Update()
+	}
 }
 
 func readFile(path string) []byte {

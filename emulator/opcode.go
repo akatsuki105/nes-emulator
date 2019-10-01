@@ -435,7 +435,12 @@ func (cpu *CPU) CLV(addr uint16) {
 
 // LDA Load A from M (M -> A)
 func (cpu *CPU) LDA(addr uint16) {
-	cpu.Reg.A = cpu.FetchMemory8(addr)
+	if addr == 0x2007 {
+		cpu.Reg.A = cpu.PPU.RAM[cpu.PPU.ptr]
+		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+	} else {
+		cpu.Reg.A = cpu.FetchMemory8(addr)
+	}
 
 	cpu.FlagN(cpu.FetchMemory8(addr))
 	cpu.FlagZ(cpu.FetchMemory8(addr))
@@ -443,7 +448,12 @@ func (cpu *CPU) LDA(addr uint16) {
 
 // LDX Load X from M (M -> X)
 func (cpu *CPU) LDX(addr uint16) {
-	cpu.Reg.X = cpu.FetchMemory8(addr)
+	if addr == 0x2007 {
+		cpu.Reg.X = cpu.PPU.RAM[cpu.PPU.ptr]
+		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+	} else {
+		cpu.Reg.X = cpu.FetchMemory8(addr)
+	}
 
 	cpu.FlagN(cpu.FetchMemory8(addr))
 	cpu.FlagZ(cpu.FetchMemory8(addr))
@@ -451,7 +461,12 @@ func (cpu *CPU) LDX(addr uint16) {
 
 // LDY Load Y from M (M -> Y)
 func (cpu *CPU) LDY(addr uint16) {
-	cpu.Reg.Y = cpu.FetchMemory8(addr)
+	if addr == 0x2007 {
+		cpu.Reg.Y = cpu.PPU.RAM[cpu.PPU.ptr]
+		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+	} else {
+		cpu.Reg.Y = cpu.FetchMemory8(addr)
+	}
 
 	cpu.FlagN(cpu.FetchMemory8(addr))
 	cpu.FlagZ(cpu.FetchMemory8(addr))
@@ -461,16 +476,34 @@ func (cpu *CPU) LDY(addr uint16) {
 
 // STA Store A to M (A -> M)
 func (cpu *CPU) STA(addr uint16) {
+	if addr == 0x2006 {
+		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.A))
+	} else if addr == 0x2007 {
+		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.A
+		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+	}
 	cpu.SetMemory8(addr, cpu.Reg.A)
 }
 
 // STX Store X to M (X -> M)
 func (cpu *CPU) STX(addr uint16) {
+	if addr == 0x2006 {
+		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.X))
+	} else if addr == 0x2007 {
+		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.X
+		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+	}
 	cpu.SetMemory8(addr, cpu.Reg.X)
 }
 
 // STY Store Y to M (Y -> M)
 func (cpu *CPU) STY(addr uint16) {
+	if addr == 0x2006 {
+		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.Y))
+	} else if addr == 0x2007 {
+		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.Y
+		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+	}
 	cpu.SetMemory8(addr, cpu.Reg.Y)
 }
 
