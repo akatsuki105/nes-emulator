@@ -434,41 +434,53 @@ func (cpu *CPU) CLV(addr uint16) {
 
 // LDA Load A from M (M -> A)
 func (cpu *CPU) LDA(addr uint16) {
-	if addr == 0x2007 {
+	switch addr {
+	case 0x2002:
+		cpu.Reg.A = cpu.FetchMemory8(addr)
+		cpu.clearVBlank()
+	case 0x2007:
 		cpu.Reg.A = cpu.PPU.RAM[cpu.PPU.ptr]
 		cpu.PPU.ptr += cpu.getVRAMDelta()
-	} else {
+	default:
 		cpu.Reg.A = cpu.FetchMemory8(addr)
 	}
 
-	cpu.FlagN(cpu.FetchMemory8(addr))
-	cpu.FlagZ(cpu.FetchMemory8(addr))
+	cpu.FlagN(cpu.Reg.A)
+	cpu.FlagZ(cpu.Reg.A)
 }
 
 // LDX Load X from M (M -> X)
 func (cpu *CPU) LDX(addr uint16) {
-	if addr == 0x2007 {
+	switch addr {
+	case 0x2002:
+		cpu.Reg.X = cpu.FetchMemory8(addr)
+		cpu.clearVBlank()
+	case 0x2007:
 		cpu.Reg.X = cpu.PPU.RAM[cpu.PPU.ptr]
 		cpu.PPU.ptr += cpu.getVRAMDelta()
-	} else {
+	default:
 		cpu.Reg.X = cpu.FetchMemory8(addr)
 	}
 
-	cpu.FlagN(cpu.FetchMemory8(addr))
-	cpu.FlagZ(cpu.FetchMemory8(addr))
+	cpu.FlagN(cpu.Reg.X)
+	cpu.FlagZ(cpu.Reg.X)
 }
 
 // LDY Load Y from M (M -> Y)
 func (cpu *CPU) LDY(addr uint16) {
-	if addr == 0x2007 {
+	switch addr {
+	case 0x2002:
+		cpu.Reg.Y = cpu.FetchMemory8(addr)
+		cpu.clearVBlank()
+	case 0x2007:
 		cpu.Reg.Y = cpu.PPU.RAM[cpu.PPU.ptr]
 		cpu.PPU.ptr += cpu.getVRAMDelta()
-	} else {
+	default:
 		cpu.Reg.Y = cpu.FetchMemory8(addr)
 	}
 
-	cpu.FlagN(cpu.FetchMemory8(addr))
-	cpu.FlagZ(cpu.FetchMemory8(addr))
+	cpu.FlagN(cpu.Reg.Y)
+	cpu.FlagZ(cpu.Reg.Y)
 }
 
 // ============================================ ストア ==================================================
@@ -476,6 +488,9 @@ func (cpu *CPU) LDY(addr uint16) {
 // STA Store A to M (A -> M)
 func (cpu *CPU) STA(addr uint16) {
 	switch addr {
+	case 0x2004:
+		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.A
+		cpu.RAM[0x2003]++
 	case 0x2005:
 		cpu.PPU.scroll[0] = cpu.PPU.scroll[1]
 		cpu.PPU.scroll[1] = cpu.Reg.A
@@ -491,6 +506,9 @@ func (cpu *CPU) STA(addr uint16) {
 // STX Store X to M (X -> M)
 func (cpu *CPU) STX(addr uint16) {
 	switch addr {
+	case 0x2004:
+		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.X
+		cpu.RAM[0x2003]++
 	case 0x2005:
 		cpu.PPU.scroll[0] = cpu.PPU.scroll[1]
 		cpu.PPU.scroll[1] = cpu.Reg.X
@@ -506,6 +524,9 @@ func (cpu *CPU) STX(addr uint16) {
 // STY Store Y to M (Y -> M)
 func (cpu *CPU) STY(addr uint16) {
 	switch addr {
+	case 0x2004:
+		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.Y
+		cpu.RAM[0x2003]++
 	case 0x2005:
 		cpu.PPU.scroll[0] = cpu.PPU.scroll[1]
 		cpu.PPU.scroll[1] = cpu.Reg.Y
