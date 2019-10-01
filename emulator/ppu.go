@@ -1,19 +1,8 @@
 package emulator
 
 import (
-	"bytes"
-	"fmt"
 	"image"
 	"image/color"
-	"image/jpeg"
-
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
-)
-
-const (
-	width  = 256
-	height = 240
 )
 
 // PPU Picture Processing Unit
@@ -22,55 +11,6 @@ type PPU struct {
 	mirror bool     // 0: 水平ミラー, 1:垂直ミラー
 	ptr    uint16   // PPURAMのポインタ 0x2006に書き込まれたとき更新される
 	scroll [2]uint8 // (水平スクロールpixel, 垂直スクロールpixel)
-}
-
-// isInVBlank VBlank中か
-func (ppu *PPU) isInVBlank() bool {
-	value := ppu.RAM[0x2002]
-	return (value >> 7) > 0
-}
-
-// getVRAMDelta CPUのVRAMアクセス時のポインタの増加量を返す
-func (ppu *PPU) getVRAMDelta() (delta uint16) {
-	value := ppu.RAM[0x2000]
-	if (value & 0x04) > 0 {
-		return 32
-	}
-	return 1
-}
-
-// Render 画面描画を行う
-func (ppu *PPU) Render() {
-	cfg := pixelgl.WindowConfig{
-		Title:  "nes-emulator",
-		Bounds: pixel.R(0, 0, width, height),
-		VSync:  true,
-	}
-	win, err := pixelgl.NewWindow(cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	for !win.Closed() {
-		for y := 0; y < height/8; y++ {
-			for x := 0; x < width/8; x++ {
-				img := ppu.outputBlock(uint(x), uint(y))
-				buf := new(bytes.Buffer)
-				if err := jpeg.Encode(buf, img, &jpeg.Options{Quality: 100}); err != nil {
-					fmt.Println("error:jpeg\n", err)
-					return
-				}
-
-				tmp, _, _ := image.Decode(buf)
-				pic := pixel.PictureDataFromImage(tmp)
-
-				sprite := pixel.NewSprite(pic, pic.Bounds())
-				matrix := pixel.IM.Moved(pixel.V(float64(x*8+4), float64(height-4-y*8)))
-				sprite.Draw(win, matrix)
-			}
-		}
-		win.Update()
-	}
 }
 
 // renderBlock 画面の(x,y)ブロックのRGBAの出力を行う

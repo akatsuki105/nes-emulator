@@ -19,7 +19,7 @@ func main() {
 
 	go cpu.MainLoop()
 
-	pixelgl.Run(cpu.PPU.Render)
+	pixelgl.Run(cpu.Render)
 }
 
 func readFile(path string) []byte {

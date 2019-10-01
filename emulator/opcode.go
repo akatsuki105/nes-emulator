@@ -436,7 +436,7 @@ func (cpu *CPU) CLV(addr uint16) {
 func (cpu *CPU) LDA(addr uint16) {
 	if addr == 0x2007 {
 		cpu.Reg.A = cpu.PPU.RAM[cpu.PPU.ptr]
-		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+		cpu.PPU.ptr += cpu.getVRAMDelta()
 	} else {
 		cpu.Reg.A = cpu.FetchMemory8(addr)
 	}
@@ -449,7 +449,7 @@ func (cpu *CPU) LDA(addr uint16) {
 func (cpu *CPU) LDX(addr uint16) {
 	if addr == 0x2007 {
 		cpu.Reg.X = cpu.PPU.RAM[cpu.PPU.ptr]
-		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+		cpu.PPU.ptr += cpu.getVRAMDelta()
 	} else {
 		cpu.Reg.X = cpu.FetchMemory8(addr)
 	}
@@ -462,7 +462,7 @@ func (cpu *CPU) LDX(addr uint16) {
 func (cpu *CPU) LDY(addr uint16) {
 	if addr == 0x2007 {
 		cpu.Reg.Y = cpu.PPU.RAM[cpu.PPU.ptr]
-		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+		cpu.PPU.ptr += cpu.getVRAMDelta()
 	} else {
 		cpu.Reg.Y = cpu.FetchMemory8(addr)
 	}
@@ -483,7 +483,7 @@ func (cpu *CPU) STA(addr uint16) {
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.A))
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.A
-		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+		cpu.PPU.ptr += cpu.getVRAMDelta()
 	}
 	cpu.SetMemory8(addr, cpu.Reg.A)
 }
@@ -498,7 +498,7 @@ func (cpu *CPU) STX(addr uint16) {
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.X))
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.X
-		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+		cpu.PPU.ptr += cpu.getVRAMDelta()
 	}
 	cpu.SetMemory8(addr, cpu.Reg.X)
 }
@@ -513,7 +513,7 @@ func (cpu *CPU) STY(addr uint16) {
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.Y))
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.Y
-		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
+		cpu.PPU.ptr += cpu.getVRAMDelta()
 	}
 	cpu.SetMemory8(addr, cpu.Reg.Y)
 }

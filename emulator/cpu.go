@@ -1,8 +1,19 @@
 package emulator
 
 import (
+	"bytes"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"time"
+
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
+)
+
+const (
+	width  = 256
+	height = 240
 )
 
 var (
@@ -230,49 +241,49 @@ func (cpu *CPU) FetchCode8(index uint) byte {
 	return code
 }
 
-// FetchMemory8 引数で指定したアドレスから値を取得する
-func (cpu *CPU) FetchMemory8(addr uint16) byte {
-	value := cpu.RAM[addr]
-	return value
-}
-
-// SetMemory8 引数で指定したアドレスにvalueを書き込む
-func (cpu *CPU) SetMemory8(addr uint16, value byte) {
-	cpu.RAM[addr] = value
-}
-
-// FlagN Nフラグを立てるか判定する
-func (cpu *CPU) FlagN(b byte) {
-	if (b & 0x80) != 0 {
-		cpu.Reg.P = cpu.Reg.P | 0x80 // 0b1000_0000
-	} else {
-		cpu.Reg.P = cpu.Reg.P & 0x7f // 0b0111_1111
+// getVRAMDelta CPUのVRAMアクセス時のポインタの増加量を返す
+func (cpu *CPU) getVRAMDelta() (delta uint16) {
+	value := cpu.RAM[0x2000]
+	if (value & 0x04) > 0 {
+		return 32
 	}
+	return 1
 }
 
-// FlagV Vフラグを立てるか判定する
-func (cpu *CPU) FlagV(b0, b1 byte, u16 uint16) {
-	if ((b0>>7)^(b1>>7) != 0) && (uint16(b1) != u16) {
-		cpu.Reg.P = cpu.Reg.P | 0x40 // 0b0100_0000
-	} else {
-		cpu.Reg.P = cpu.Reg.P & 0xbf // 0b1011_1111
+// Render 画面描画を行う
+func (cpu *CPU) Render() {
+	cfg := pixelgl.WindowConfig{
+		Title:  "nes-emulator",
+		Bounds: pixel.R(0, 0, width, height),
+		VSync:  true,
 	}
-}
-
-// FlagZ Zフラグを立てるか判定する
-func (cpu *CPU) FlagZ(b byte) {
-	if b == 0 {
-		cpu.Reg.P = cpu.Reg.P | 0x02 // 0b0000_0010
-	} else {
-		cpu.Reg.P = cpu.Reg.P & 0xfd // 0b1111_1101
+	win, err := pixelgl.NewWindow(cfg)
+	if err != nil {
+		panic(err)
 	}
-}
 
-// FlagC Cフラグを立てるか判定する
-func (cpu *CPU) FlagC(u16 uint16) {
-	if (u16 >> 8) != 0 {
-		cpu.Reg.P = cpu.Reg.P | 0x01 // 0b0000_0001
-	} else {
-		cpu.Reg.P = cpu.Reg.P & 0xfe // 0b1111_1110
+	for !win.Closed() {
+
+		cpu.setVBlank()
+		for y := 0; y < height/8; y++ {
+			for x := 0; x < width/8; x++ {
+				img := cpu.PPU.outputBlock(uint(x), uint(y))
+				buf := new(bytes.Buffer)
+				if err := jpeg.Encode(buf, img, &jpeg.Options{Quality: 100}); err != nil {
+					fmt.Println("error:jpeg\n", err)
+					return
+				}
+
+				tmp, _, _ := image.Decode(buf)
+				pic := pixel.PictureDataFromImage(tmp)
+
+				sprite := pixel.NewSprite(pic, pic.Bounds())
+				matrix := pixel.IM.Moved(pixel.V(float64(x*8+4), float64(height-4-y*8)))
+				sprite.Draw(win, matrix)
+			}
+		}
+		cpu.clearVBlank()
+
+		win.Update()
 	}
 }
