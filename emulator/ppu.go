@@ -11,6 +11,11 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 )
 
+const (
+	width  = 256
+	height = 240
+)
+
 // PPU Picture Processing Unit
 type PPU struct {
 	RAM    [0x4000]byte
@@ -38,7 +43,7 @@ func (ppu *PPU) getVRAMDelta() (delta uint16) {
 func (ppu *PPU) Render() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "nes-emulator",
-		Bounds: pixel.R(0, 0, 256, 240),
+		Bounds: pixel.R(0, 0, width, height),
 		VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
@@ -47,11 +52,11 @@ func (ppu *PPU) Render() {
 	}
 
 	for !win.Closed() {
-		for y := 0; y < 30; y++ {
-			for x := 0; x < 32; x++ {
+		for y := 0; y < height/8; y++ {
+			for x := 0; x < width/8; x++ {
 				img := ppu.outputBlock(uint(x), uint(y))
 				buf := new(bytes.Buffer)
-				if err := jpeg.Encode(buf, img, &jpeg.Options{100}); err != nil {
+				if err := jpeg.Encode(buf, img, &jpeg.Options{Quality: 100}); err != nil {
 					fmt.Println("error:jpeg\n", err)
 					return
 				}
@@ -60,7 +65,7 @@ func (ppu *PPU) Render() {
 				pic := pixel.PictureDataFromImage(tmp)
 
 				sprite := pixel.NewSprite(pic, pic.Bounds())
-				matrix := pixel.IM.Moved(pixel.V(float64(x*8+4), float64(236-y*8)))
+				matrix := pixel.IM.Moved(pixel.V(float64(x*8+4), float64(height-4-y*8)))
 				sprite.Draw(win, matrix)
 			}
 		}
