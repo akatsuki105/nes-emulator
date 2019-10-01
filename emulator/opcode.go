@@ -170,7 +170,7 @@ func (cpu *CPU) BEQ(addr uint16) {
 
 // BNE Branch on Z clear
 func (cpu *CPU) BNE(addr uint16) {
-	zFlag := uint8(cpu.Reg.P & 0x02)
+	zFlag := uint8(cpu.Reg.P & 0x02) // 0b0000_0010
 	if zFlag == 0 {
 		cpu.Reg.PC = addr
 	}
@@ -258,6 +258,7 @@ func (cpu *CPU) RTS(addr uint16) {
 
 // BRK Break Interrupt
 func (cpu *CPU) BRK(addr uint16) {
+	cpu.Reg.P = cpu.Reg.P | 0x10 // set B Flag
 	if addr == null {
 		iFlag := cpu.Reg.P & 0x04
 		if iFlag == 0 {
@@ -373,11 +374,9 @@ func (cpu *CPU) INY(addr uint16) {
 
 // DEY Decrement Y by one (Y - 1 -> Y)
 func (cpu *CPU) DEY(addr uint16) {
-	if addr == null {
-		cpu.Reg.Y--
-		cpu.FlagN(cpu.Reg.Y)
-		cpu.FlagZ(cpu.Reg.Y)
-	}
+	cpu.Reg.Y--
+	cpu.FlagN(cpu.Reg.Y)
+	cpu.FlagZ(cpu.Reg.Y)
 }
 
 // ============================================ フラグ操作 ============================================
@@ -476,9 +475,13 @@ func (cpu *CPU) LDY(addr uint16) {
 
 // STA Store A to M (A -> M)
 func (cpu *CPU) STA(addr uint16) {
-	if addr == 0x2006 {
+	switch addr {
+	case 0x2005:
+		cpu.PPU.scroll[0] = cpu.PPU.scroll[1]
+		cpu.PPU.scroll[1] = cpu.Reg.A
+	case 0x2006:
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.A))
-	} else if addr == 0x2007 {
+	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.A
 		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
 	}
@@ -487,9 +490,13 @@ func (cpu *CPU) STA(addr uint16) {
 
 // STX Store X to M (X -> M)
 func (cpu *CPU) STX(addr uint16) {
-	if addr == 0x2006 {
+	switch addr {
+	case 0x2005:
+		cpu.PPU.scroll[0] = cpu.PPU.scroll[1]
+		cpu.PPU.scroll[1] = cpu.Reg.X
+	case 0x2006:
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.X))
-	} else if addr == 0x2007 {
+	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.X
 		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
 	}
@@ -498,9 +505,13 @@ func (cpu *CPU) STX(addr uint16) {
 
 // STY Store Y to M (Y -> M)
 func (cpu *CPU) STY(addr uint16) {
-	if addr == 0x2006 {
+	switch addr {
+	case 0x2005:
+		cpu.PPU.scroll[0] = cpu.PPU.scroll[1]
+		cpu.PPU.scroll[1] = cpu.Reg.Y
+	case 0x2006:
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.Y))
-	} else if addr == 0x2007 {
+	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.Y
 		cpu.PPU.ptr += cpu.PPU.getVRAMDelta()
 	}

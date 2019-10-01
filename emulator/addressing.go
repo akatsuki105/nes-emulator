@@ -43,7 +43,8 @@ func (cpu *CPU) AbsoluteIndirectAddressing() (addr uint16) {
 func (cpu *CPU) AbsoluteXAddressing() (addr uint16) {
 	lower := uint16(cpu.FetchCode8(1))
 	upper := uint16(cpu.FetchCode8(2))
-	addr = (upper << 8) | (lower + uint16(cpu.Reg.X))
+	addr = (upper << 8) | lower
+	addr += uint16(cpu.Reg.X)
 
 	cpu.Reg.PC += 3
 	return addr
@@ -53,7 +54,8 @@ func (cpu *CPU) AbsoluteXAddressing() (addr uint16) {
 func (cpu *CPU) AbsoluteYAddressing() (addr uint16) {
 	lower := uint16(cpu.FetchCode8(1))
 	upper := uint16(cpu.FetchCode8(2))
-	addr = (upper << 8) | (lower + uint16(cpu.Reg.Y))
+	addr = (upper << 8) | lower
+	addr += uint16(cpu.Reg.Y)
 
 	cpu.Reg.PC += 3
 	return addr
@@ -119,7 +121,8 @@ func (cpu *CPU) IndirectIndexedAddressing() (addr uint16) {
 
 // RelativeAddressing Relativeのアドレスを返す
 func (cpu *CPU) RelativeAddressing() (addr uint16) {
-	addr = uint16(int8(cpu.Reg.PC) + 1 + int8(cpu.FetchCode8(1)))
+	delta := int8(cpu.FetchCode8(1))
 	cpu.Reg.PC += 2
+	addr = uint16(int32(cpu.Reg.PC) + int32(delta))
 	return addr
 }
