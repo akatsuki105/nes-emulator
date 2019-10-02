@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-const (
-	width  = 256
-	height = 240
-)
-
 var (
 	prgRomPageSize int = 16 * 1024 // プログラムROMのページサイズ
 	chrRomPageSize int = 8 * 1024  // キャラクタROMのページサイズ
@@ -27,9 +22,10 @@ type cpuRegister struct {
 
 // CPU Central Processing Unit
 type CPU struct {
-	Reg cpuRegister
-	RAM [0x10000]byte
-	PPU PPU
+	Reg     cpuRegister
+	RAM     [0x10000]byte
+	PPU     PPU
+	joypad1 Joypad
 }
 
 // InitIRQVector 割り込みベクタの初期化
@@ -72,11 +68,8 @@ func (cpu *CPU) LoadROM(rom []byte) {
 
 // MainLoop CPUのメインサイクル
 func (cpu *CPU) MainLoop() {
-	for {
-		time.Sleep(time.Millisecond * 1)
-
+	for range time.Tick(100 * time.Nanosecond) {
 		opcode := cpu.FetchCode8(0)
-
 		instruction, addressing := instructions[opcode][0], instructions[opcode][1]
 		var addr uint16
 		switch addressing {

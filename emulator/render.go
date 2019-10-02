@@ -5,6 +5,11 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 )
 
+const (
+	width  = 256
+	height = 240
+)
+
 // Render 画面描画を行う
 func (cpu *CPU) Render() {
 	cfg := pixelgl.WindowConfig{
@@ -16,6 +21,8 @@ func (cpu *CPU) Render() {
 	if err != nil {
 		panic(err)
 	}
+
+	go cpu.handleJoypad(win)
 
 	for !win.Closed() {
 		cpu.setVBlank()
@@ -32,13 +39,13 @@ func (cpu *CPU) Render() {
 
 		// SPR描画
 		for i := 0; i < 64; i++ {
-			blockX, blockY := cpu.PPU.sRAM[i*4+3]/8, (cpu.PPU.sRAM[i*4])/8
+			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])
 			spriteNum := cpu.PPU.sRAM[i*4+1]
 			attr := cpu.PPU.sRAM[i*4+2]
 			if attr&0x20 == 0 {
 				pic := cpu.PPU.outputSpritePicture(spriteNum, attr)
 				sprite := pixel.NewSprite(pic, pic.Bounds())
-				matrix := pixel.IM.Moved(pixel.V(float64(blockX*8+4), float64(height-4-blockY*8)))
+				matrix := pixel.IM.Moved(pixel.V(float64(pixelX+4), float64(height-4-pixelY)))
 				sprite.Draw(win, matrix)
 			}
 		}

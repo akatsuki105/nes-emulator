@@ -2,7 +2,9 @@ package emulator
 
 const (
 	// 何もないことを表す
-	null uint16 = 0x2008
+	null    uint16 = 0x2008
+	joypad1 uint16 = 0x4016
+	joypad2 uint16 = 0x4017
 )
 
 var (

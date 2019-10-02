@@ -441,6 +441,9 @@ func (cpu *CPU) LDA(addr uint16) {
 	case 0x2007:
 		cpu.Reg.A = cpu.PPU.RAM[cpu.PPU.ptr]
 		cpu.PPU.ptr += cpu.getVRAMDelta()
+	case joypad1:
+		cpu.Reg.A = cpu.joypad1.cmd[cpu.joypad1.ctr]
+		cpu.joypad1.ctr++
 	default:
 		cpu.Reg.A = cpu.FetchMemory8(addr)
 	}
@@ -458,6 +461,9 @@ func (cpu *CPU) LDX(addr uint16) {
 	case 0x2007:
 		cpu.Reg.X = cpu.PPU.RAM[cpu.PPU.ptr]
 		cpu.PPU.ptr += cpu.getVRAMDelta()
+	case joypad1:
+		cpu.Reg.X = cpu.joypad1.cmd[cpu.joypad1.ctr]
+		cpu.joypad1.ctr++
 	default:
 		cpu.Reg.X = cpu.FetchMemory8(addr)
 	}
@@ -475,6 +481,9 @@ func (cpu *CPU) LDY(addr uint16) {
 	case 0x2007:
 		cpu.Reg.Y = cpu.PPU.RAM[cpu.PPU.ptr]
 		cpu.PPU.ptr += cpu.getVRAMDelta()
+	case joypad1:
+		cpu.Reg.Y = cpu.joypad1.cmd[cpu.joypad1.ctr]
+		cpu.joypad1.ctr++
 	default:
 		cpu.Reg.Y = cpu.FetchMemory8(addr)
 	}
@@ -489,6 +498,7 @@ func (cpu *CPU) LDY(addr uint16) {
 func (cpu *CPU) STA(addr uint16) {
 	switch addr {
 	case 0x2004:
+		// fmt.Printf("%d: %d\n", cpu.RAM[0x2003], cpu.Reg.A)
 		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.A
 		cpu.RAM[0x2003]++
 	case 0x2005:
@@ -499,6 +509,11 @@ func (cpu *CPU) STA(addr uint16) {
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.A
 		cpu.PPU.ptr += cpu.getVRAMDelta()
+	case joypad1:
+		cpu.joypad1.ctr = 0
+		for i := 0; i < 8; i++ {
+			cpu.joypad1.cmd[i] = 0
+		}
 	}
 	cpu.SetMemory8(addr, cpu.Reg.A)
 }
@@ -507,6 +522,7 @@ func (cpu *CPU) STA(addr uint16) {
 func (cpu *CPU) STX(addr uint16) {
 	switch addr {
 	case 0x2004:
+		// fmt.Printf("%d: %d\n", cpu.RAM[0x2003], cpu.Reg.A)
 		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.X
 		cpu.RAM[0x2003]++
 	case 0x2005:
@@ -517,6 +533,11 @@ func (cpu *CPU) STX(addr uint16) {
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.X
 		cpu.PPU.ptr += cpu.getVRAMDelta()
+	case joypad1:
+		cpu.joypad1.ctr = 0
+		for i := 0; i < 8; i++ {
+			cpu.joypad1.cmd[i] = 0
+		}
 	}
 	cpu.SetMemory8(addr, cpu.Reg.X)
 }
@@ -525,6 +546,7 @@ func (cpu *CPU) STX(addr uint16) {
 func (cpu *CPU) STY(addr uint16) {
 	switch addr {
 	case 0x2004:
+		// fmt.Printf("%d: %d\n", cpu.RAM[0x2003], cpu.Reg.A)
 		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.Y
 		cpu.RAM[0x2003]++
 	case 0x2005:
@@ -535,6 +557,11 @@ func (cpu *CPU) STY(addr uint16) {
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.Y
 		cpu.PPU.ptr += cpu.getVRAMDelta()
+	case joypad1:
+		cpu.joypad1.ctr = 0
+		for i := 0; i < 8; i++ {
+			cpu.joypad1.cmd[i] = 0
+		}
 	}
 	cpu.SetMemory8(addr, cpu.Reg.Y)
 }
