@@ -24,18 +24,24 @@ func (cpu *CPU) Render() {
 
 	go cpu.handleJoypad(win)
 
+	cpu.PPU.CacheBG()
+
 	for !win.Closed() {
 		cpu.setVBlank()
 
+		batch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
+
 		// BG描画
+		batch.Clear()
 		for y := 0; y < height/8; y++ {
 			for x := 0; x < width/8; x++ {
-				pic := cpu.PPU.outputBGBlockPicture(uint(x), uint(y))
-				sprite := pixel.NewSprite(pic, pic.Bounds())
+				rect := cpu.PPU.outputBGRect(uint(x), uint(y))
+				sprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
 				matrix := pixel.IM.Moved(pixel.V(float64(x*8+4), float64(height-4-y*8)))
-				sprite.Draw(win, matrix)
+				sprite.Draw(batch, matrix)
 			}
 		}
+		batch.Draw(win)
 
 		// SPR描画
 		for i := 0; i < 64; i++ {
