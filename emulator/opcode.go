@@ -509,6 +509,11 @@ func (cpu *CPU) STA(addr uint16) {
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.A
 		cpu.PPU.ptr += cpu.getVRAMDelta()
+	case spriteDMA:
+		start := uint16(cpu.Reg.A) << 8
+		for i := 0; i < 256; i++ {
+			cpu.PPU.sRAM[i] = cpu.FetchMemory8(start + uint16(i))
+		}
 	case joypad1:
 		cpu.joypad1.ctr = 0
 		for i := 0; i < 8; i++ {
@@ -533,6 +538,11 @@ func (cpu *CPU) STX(addr uint16) {
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.X
 		cpu.PPU.ptr += cpu.getVRAMDelta()
+	case spriteDMA:
+		start := uint16(cpu.Reg.X) << 8
+		for i := 0; i < 256; i++ {
+			cpu.PPU.sRAM[i] = cpu.FetchMemory8(start + uint16(i))
+		}
 	case joypad1:
 		cpu.joypad1.ctr = 0
 		for i := 0; i < 8; i++ {
@@ -557,6 +567,11 @@ func (cpu *CPU) STY(addr uint16) {
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.Y
 		cpu.PPU.ptr += cpu.getVRAMDelta()
+	case spriteDMA:
+		start := uint16(cpu.Reg.Y) << 8
+		for i := 0; i < 256; i++ {
+			cpu.PPU.sRAM[i] = cpu.FetchMemory8(start + uint16(i))
+		}
 	case joypad1:
 		cpu.joypad1.ctr = 0
 		for i := 0; i < 8; i++ {

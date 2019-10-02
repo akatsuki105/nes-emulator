@@ -68,7 +68,7 @@ func (cpu *CPU) LoadROM(rom []byte) {
 
 // MainLoop CPUのメインサイクル
 func (cpu *CPU) MainLoop() {
-	for range time.Tick(100 * time.Nanosecond) {
+	for range time.Tick(1 * time.Nanosecond) {
 		opcode := cpu.FetchCode8(0)
 		instruction, addressing := instructions[opcode][0], instructions[opcode][1]
 		var addr uint16

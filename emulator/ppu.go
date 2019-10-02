@@ -75,18 +75,53 @@ func (ppu *PPU) outputSpritePicture(spriteNum, attr byte) (pic *pixel.PictureDat
 	img := image.NewRGBA(image.Rect(0, 0, 8, 8))
 
 	pallete := attr & 0x03 // パレット番号
-	// lrTurn := attr & 0x40  // 左右反転
-	// udTurn := attr & 0x80  // 上下反転
+	lrTurn := attr & 0x40  // 左右反転
+	udTurn := attr & 0x80  // 上下反転
 
 	var w, h uint
-	for h = 0; h < 8; h++ {
-		for w = 0; w < 8; w++ {
-			color0 := (spriteBytes[h] & (0x01 << (7 - w))) >> (7 - w)
-			color1 := ((spriteBytes[h+8] & (0x01 << (7 - w))) >> (7 - w)) << 1
+	if lrTurn > 0 && udTurn > 0 {
+		for h = 0; h < 8; h++ {
+			for w = 0; w < 8; w++ {
+				color0 := (spriteBytes[8-h] & (0x01 << w)) >> w
+				color1 := (spriteBytes[16-h] & (0x01 << w) >> w) << 1
 
-			p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
-			R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
-			img.Set((int)(w), (int)(h), color.RGBA{R, G, B, 0})
+				p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
+				R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
+				img.Set((int)(w), (int)(h), color.RGBA{R, G, B, 0})
+			}
+		}
+	} else if lrTurn > 0 && udTurn == 0 {
+		for h = 0; h < 8; h++ {
+			for w = 0; w < 8; w++ {
+				color0 := (spriteBytes[h] & (0x01 << w)) >> w
+				color1 := (spriteBytes[h+8] & (0x01 << w) >> w) << 1
+
+				p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
+				R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
+				img.Set((int)(w), (int)(h), color.RGBA{R, G, B, 0})
+			}
+		}
+	} else if lrTurn == 0 && udTurn > 0 {
+		for h = 0; h < 8; h++ {
+			for w = 0; w < 8; w++ {
+				color0 := (spriteBytes[8-h] & (0x01 << (7 - w))) >> (7 - w)
+				color1 := ((spriteBytes[16-h] & (0x01 << (7 - w))) >> (7 - w)) << 1
+
+				p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
+				R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
+				img.Set((int)(w), (int)(h), color.RGBA{R, G, B, 0})
+			}
+		}
+	} else {
+		for h = 0; h < 8; h++ {
+			for w = 0; w < 8; w++ {
+				color0 := (spriteBytes[h] & (0x01 << (7 - w))) >> (7 - w)
+				color1 := ((spriteBytes[h+8] & (0x01 << (7 - w))) >> (7 - w)) << 1
+
+				p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
+				R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
+				img.Set((int)(w), (int)(h), color.RGBA{R, G, B, 0})
+			}
 		}
 	}
 
