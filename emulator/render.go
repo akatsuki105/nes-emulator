@@ -25,39 +25,53 @@ func (cpu *CPU) Render() {
 	go cpu.handleJoypad(win)
 
 	cpu.PPU.CacheBG()
+	BGBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
+
+	cpu.PPU.CacheSPR()
+	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 
 	for !win.Closed() {
 		cpu.setVBlank()
 
-		batch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
-
 		// BG描画
-		batch.Clear()
+		BGBatch.Clear()
 		for y := 0; y < height/8; y++ {
 			for x := 0; x < width/8; x++ {
 				rect := cpu.PPU.outputBGRect(uint(x), uint(y))
 				sprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
 				matrix := pixel.IM.Moved(pixel.V(float64(x*8+4), float64(height-4-y*8)))
-				sprite.Draw(batch, matrix)
+				sprite.Draw(BGBatch, matrix)
 			}
 		}
-		batch.Draw(win)
+		BGBatch.Draw(win)
 
 		// SPR描画
+		SPRBatch.Clear()
 		for i := 0; i < 64; i++ {
 			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])
 			spriteNum := cpu.PPU.sRAM[i*4+1]
 			attr := cpu.PPU.sRAM[i*4+2]
 			if attr&0x20 == 0 {
-				pic := cpu.PPU.outputSpritePicture(spriteNum, attr)
-				sprite := pixel.NewSprite(pic, pic.Bounds())
+				rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
+				sprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
 				matrix := pixel.IM.Moved(pixel.V(float64(pixelX+4), float64(height-4-pixelY)))
-				sprite.Draw(win, matrix)
+				sprite.Draw(SPRBatch, matrix)
 			}
 		}
+
+		SPRBatch.Draw(win)
 
 		cpu.clearVBlank()
 
 		win.Update()
+
+		if !cpu.PPU.BGPalleteOK {
+			cpu.PPU.CacheBG()
+			BGBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
+		}
+		if !cpu.PPU.SPRPalleteOK {
+			cpu.PPU.CacheSPR()
+			SPRBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
+		}
 	}
 }

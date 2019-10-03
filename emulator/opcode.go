@@ -508,6 +508,11 @@ func (cpu *CPU) STA(addr uint16) {
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.A))
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.A
+		if cpu.PPU.ptr == 0x3f0f {
+			cpu.PPU.BGPalleteOK = false
+		} else if cpu.PPU.ptr == 0x3f1f {
+			cpu.PPU.SPRPalleteOK = false
+		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case spriteDMA:
 		start := uint16(cpu.Reg.A) << 8
@@ -537,6 +542,11 @@ func (cpu *CPU) STX(addr uint16) {
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.X))
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.X
+		if cpu.PPU.ptr == 0x3f0f {
+			cpu.PPU.BGPalleteOK = false
+		} else if cpu.PPU.ptr == 0x3f1f {
+			cpu.PPU.SPRPalleteOK = false
+		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case spriteDMA:
 		start := uint16(cpu.Reg.X) << 8
@@ -566,6 +576,11 @@ func (cpu *CPU) STY(addr uint16) {
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.Y))
 	case 0x2007:
 		cpu.PPU.RAM[cpu.PPU.ptr] = cpu.Reg.Y
+		if cpu.PPU.ptr == 0x3f0f {
+			cpu.PPU.BGPalleteOK = false
+		} else if cpu.PPU.ptr == 0x3f1f {
+			cpu.PPU.SPRPalleteOK = false
+		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case spriteDMA:
 		start := uint16(cpu.Reg.Y) << 8
