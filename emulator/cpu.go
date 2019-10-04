@@ -2,6 +2,7 @@ package emulator
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -26,6 +27,7 @@ type CPU struct {
 	RAM     [0x10000]byte
 	PPU     PPU
 	joypad1 Joypad
+	mutex   sync.Mutex
 }
 
 // InitReg レジスタの初期化
@@ -68,16 +70,9 @@ func (cpu *CPU) LoadROM(rom []byte) {
 // MainLoop CPUのメインサイクル
 func (cpu *CPU) MainLoop() {
 	for range time.Tick(1 * time.Nanosecond) {
+		cpu.mutex.Lock()
 		opcode := cpu.FetchCode8(0)
-
-		fmt.Printf("eip: %x opcode: %x ", cpu.Reg.PC, opcode)
-
 		instruction, addressing := instructions[opcode][0], instructions[opcode][1]
-		fmt.Printf("IST: %s, Addressing: %s ", instruction, addressing)
-
-		if instruction == "JMP" {
-			fmt.Printf("next: %x next2: %x eip2: %x ", cpu.RAM[0x8045], cpu.RAM[0x8046], cpu.Reg.PC)
-		}
 
 		var addr uint16
 		switch addressing {
@@ -108,10 +103,8 @@ func (cpu *CPU) MainLoop() {
 		case "Ind":
 			addr = cpu.AbsoluteIndirectAddressing()
 		default:
-			// fmt.Printf("addressing is not found: %d=0x%x\n", opcode, opcode)
+			fmt.Printf("addressing is not found: %d=0x%x\n", opcode, opcode)
 		}
-
-		fmt.Printf("addr: %x\n", addr)
 
 		switch instruction {
 		case "ADC":
@@ -227,8 +220,10 @@ func (cpu *CPU) MainLoop() {
 		case "NOP":
 			cpu.NOP(addr)
 		default:
-			// fmt.Printf("instruction is not found: %d=0x%x\n", opcode, opcode)
+			fmt.Printf("instruction is not found: %d=0x%x\n", opcode, opcode)
 		}
+
+		cpu.mutex.Unlock()
 	}
 }
 

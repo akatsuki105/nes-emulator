@@ -53,7 +53,6 @@ func (cpu *CPU) Render() {
 			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])
 			spriteNum := cpu.PPU.sRAM[i*4+1]
 			attr := cpu.PPU.sRAM[i*4+2]
-			// fmt.Printf("%d: %x,(%d, %d)\n", i, spriteNum, pixelX, pixelY)
 			if attr&0x20 == 0 {
 				rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
 				sprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
@@ -78,7 +77,9 @@ func (cpu *CPU) Render() {
 
 // VBlank VBlankを起こす
 func (cpu *CPU) VBlank() {
-	for range time.Tick(16 * time.Millisecond) {
+	for range time.Tick(20 * time.Millisecond) {
+		cpu.mutex.Lock()
 		cpu.setVBlank()
+		cpu.mutex.Unlock()
 	}
 }
