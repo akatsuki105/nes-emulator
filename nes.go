@@ -14,7 +14,6 @@ func main() {
 
 	cpu := &emulator.CPU{}
 	cpu.InitReg()
-	cpu.InitIRQVector()
 	cpu.LoadROM(bytes)
 
 	go cpu.MainLoop()

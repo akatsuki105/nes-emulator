@@ -28,12 +28,6 @@ type CPU struct {
 	joypad1 Joypad
 }
 
-// InitIRQVector 割り込みベクタの初期化
-func (cpu *CPU) InitIRQVector() {
-	cpu.RAM[0xfffc] = 0x00
-	cpu.RAM[0xfffd] = 0x80
-}
-
 // InitReg レジスタの初期化
 func (cpu *CPU) InitReg() {
 	cpu.Reg.S = 0x00 // スタックは0x100から下に伸びる
@@ -58,6 +52,11 @@ func (cpu *CPU) LoadROM(rom []byte) {
 	// プログラムROMを0x8000~に配置
 	for i := 0; i < len(prgBytes); i++ {
 		cpu.RAM[0x8000+i] = prgBytes[i]
+
+		// ページサイズが1のときは割り込みハンドラが0xbffa~に配置されるので0xfffa~にミラーする
+		if prgPage == 1 && 0x8000+i >= 0xbffa {
+			cpu.RAM[0x8000+i+0x4000] = prgBytes[i]
+		}
 	}
 
 	// キャラクタROMをPPUの0x0000~に配置
@@ -70,7 +69,16 @@ func (cpu *CPU) LoadROM(rom []byte) {
 func (cpu *CPU) MainLoop() {
 	for range time.Tick(1 * time.Nanosecond) {
 		opcode := cpu.FetchCode8(0)
+
+		fmt.Printf("eip: %x opcode: %x ", cpu.Reg.PC, opcode)
+
 		instruction, addressing := instructions[opcode][0], instructions[opcode][1]
+		fmt.Printf("IST: %s, Addressing: %s ", instruction, addressing)
+
+		if instruction == "JMP" {
+			fmt.Printf("next: %x next2: %x eip2: %x ", cpu.RAM[0x8045], cpu.RAM[0x8046], cpu.Reg.PC)
+		}
+
 		var addr uint16
 		switch addressing {
 		case "impl":
@@ -100,8 +108,10 @@ func (cpu *CPU) MainLoop() {
 		case "Ind":
 			addr = cpu.AbsoluteIndirectAddressing()
 		default:
-			fmt.Printf("addressing is not found: %d\n", opcode)
+			// fmt.Printf("addressing is not found: %d=0x%x\n", opcode, opcode)
 		}
+
+		fmt.Printf("addr: %x\n", addr)
 
 		switch instruction {
 		case "ADC":
@@ -217,7 +227,7 @@ func (cpu *CPU) MainLoop() {
 		case "NOP":
 			cpu.NOP(addr)
 		default:
-			fmt.Printf("instruction is not found: %d\n", opcode)
+			// fmt.Printf("instruction is not found: %d=0x%x\n", opcode, opcode)
 		}
 	}
 }

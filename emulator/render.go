@@ -1,6 +1,8 @@
 package emulator
 
 import (
+	"time"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 )
@@ -30,9 +32,9 @@ func (cpu *CPU) Render() {
 	cpu.PPU.CacheSPR()
 	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 
-	for !win.Closed() {
-		cpu.setVBlank()
+	go cpu.VBlank()
 
+	for !win.Closed() {
 		// BG描画
 		BGBatch.Clear()
 		for y := 0; y < height/8; y++ {
@@ -51,6 +53,7 @@ func (cpu *CPU) Render() {
 			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])
 			spriteNum := cpu.PPU.sRAM[i*4+1]
 			attr := cpu.PPU.sRAM[i*4+2]
+			// fmt.Printf("%d: %x,(%d, %d)\n", i, spriteNum, pixelX, pixelY)
 			if attr&0x20 == 0 {
 				rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
 				sprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
@@ -58,10 +61,7 @@ func (cpu *CPU) Render() {
 				sprite.Draw(SPRBatch, matrix)
 			}
 		}
-
 		SPRBatch.Draw(win)
-
-		cpu.clearVBlank()
 
 		win.Update()
 
@@ -73,5 +73,12 @@ func (cpu *CPU) Render() {
 			cpu.PPU.CacheSPR()
 			SPRBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 		}
+	}
+}
+
+// VBlank VBlankを起こす
+func (cpu *CPU) VBlank() {
+	for range time.Tick(16 * time.Millisecond) {
+		cpu.setVBlank()
 	}
 }

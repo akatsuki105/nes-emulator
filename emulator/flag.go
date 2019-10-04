@@ -3,6 +3,7 @@ package emulator
 // setVBlank VBlankにする
 func (cpu *CPU) setVBlank() {
 	cpu.RAM[0x2002] = cpu.RAM[0x2002] | 0x80
+	cpu.NMI(null)
 }
 
 // clearVBlank VBlankを解除

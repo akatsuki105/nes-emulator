@@ -258,7 +258,6 @@ func (cpu *CPU) RTS(addr uint16) {
 
 // BRK Break Interrupt
 func (cpu *CPU) BRK(addr uint16) {
-	cpu.Reg.P = cpu.Reg.P | 0x10 // set B Flag
 	if addr == null {
 		iFlag := cpu.Reg.P & 0x04
 		if iFlag == 0 {
@@ -296,6 +295,31 @@ func (cpu *CPU) RTI(addr uint16) {
 		upper := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
 		cpu.Reg.S--
 		cpu.Reg.PC = (upper << 8) | lower // ここでPCにリターンしているかつ割り込みなのでインクリメントは必要ない
+
+		cpu.RAM[0x2000] = cpu.RAM[0x2000] | 0x80 // allow NMI
+	}
+}
+
+// NMI Non-maskable Interrupt
+func (cpu *CPU) NMI(addr uint16) {
+	if addr == null && (cpu.RAM[0x2000]>>7) > 0 {
+		cpu.RAM[0x2000] = cpu.RAM[0x2000] & 0x7f // block NMI
+
+		cpu.Reg.P = cpu.Reg.P & 0xef // clear B Flag
+
+		// push PC & SR
+		lower0 := byte((cpu.Reg.PC))
+		upper0 := byte((cpu.Reg.PC) >> 8)
+		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), upper0)
+		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 1), lower0)
+		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 2), cpu.Reg.P)
+		cpu.Reg.S += 3
+
+		cpu.Reg.P = cpu.Reg.P | 0x04 // set I Flag
+
+		lower1 := uint16(cpu.FetchMemory8(0xfffa))
+		upper1 := uint16(cpu.FetchMemory8(0xfffb))
+		cpu.Reg.PC = (upper1 << 8) | lower1
 	}
 }
 
@@ -498,7 +522,6 @@ func (cpu *CPU) LDY(addr uint16) {
 func (cpu *CPU) STA(addr uint16) {
 	switch addr {
 	case 0x2004:
-		// fmt.Printf("%d: %d\n", cpu.RAM[0x2003], cpu.Reg.A)
 		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.A
 		cpu.RAM[0x2003]++
 	case 0x2005:
@@ -526,7 +549,6 @@ func (cpu *CPU) STA(addr uint16) {
 func (cpu *CPU) STX(addr uint16) {
 	switch addr {
 	case 0x2004:
-		// fmt.Printf("%d: %d\n", cpu.RAM[0x2003], cpu.Reg.A)
 		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.X
 		cpu.RAM[0x2003]++
 	case 0x2005:
@@ -554,7 +576,6 @@ func (cpu *CPU) STX(addr uint16) {
 func (cpu *CPU) STY(addr uint16) {
 	switch addr {
 	case 0x2004:
-		// fmt.Printf("%d: %d\n", cpu.RAM[0x2003], cpu.Reg.A)
 		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.Y
 		cpu.RAM[0x2003]++
 	case 0x2005:
