@@ -67,21 +67,24 @@ func (ppu *PPU) CacheBG() {
 // renderBlock 画面の(x,y)ブロックのRGBAの出力を行う
 // CHR => 0x0000 BG => 0x1000なら0x0000-0x00ffはspr、0x100-0x1ffはbg　逆なら逆
 func (ppu *PPU) outputBGRect(x, y uint) (rect pixel.Rect) {
+	blockX, blockY, indexX, indexY := x/8, y/8, x%8, y%8
+
 	scrollPixelX, scrollPixelY := uint(ppu.scroll[0]), uint(ppu.scroll[1])
 	var spriteNum uint
 	var attr byte
-	if scrollPixelX+x*8 > width && scrollPixelY+y*8 > height {
+	if scrollPixelX+x > width && scrollPixelY+y > height {
 		spriteNum = uint(ppu.RAM[0x2c00+(x-scrollPixelX/8)+(y-scrollPixelY/8)*0x20])
 		attr = ppu.RAM[0x2fc0+(x-scrollPixelX/8)/4+(y-scrollPixelY/8)/4*0x08]
-	} else if scrollPixelX+x*8 > width && scrollPixelY+y*8 <= height {
-		spriteNum = uint(ppu.RAM[0x2400+(x-(width/8-scrollPixelX/8))+y*0x20])
-		attr = ppu.RAM[0x27c0+(x-(width/8-scrollPixelX/8))/4+(y+scrollPixelY/8/4)*0x08]
-	} else if scrollPixelX+x*8 <= width && scrollPixelY+y*8 > height {
+	} else if scrollPixelX+x > width && scrollPixelY+y <= height {
+		relBlockX, relBlockY := blockX-(width-scrollPixelX)/8, blockY+scrollPixelY/8 // x, y がスクリーン原点を(0, 0)ブロックとしたときどのブロックにいるか
+		spriteNum = uint(ppu.RAM[0x2400+relBlockX+relBlockY*0x20])
+		attr = ppu.RAM[0x27c0+relBlockX/4+relBlockY/4*0x08]
+	} else if scrollPixelX+x <= width && scrollPixelY+y > height {
 		spriteNum = uint(ppu.RAM[0x2800+x+(y-scrollPixelY/8)*0x20])
 		attr = ppu.RAM[0x2bc0+(x+scrollPixelX/8)/4+(y-scrollPixelY/8)/4*0x08]
 	} else {
-		spriteNum = uint(ppu.RAM[0x2000+(x+scrollPixelX/8)+(y+scrollPixelY/8)*0x20])
-		attr = ppu.RAM[0x23c0+(x+scrollPixelX/8)/4+(y+scrollPixelY/8)/4*0x08]
+		spriteNum = uint(ppu.RAM[0x2000+(blockX+scrollPixelX/8)+(blockY+scrollPixelY/8)*0x20])
+		attr = ppu.RAM[0x23c0+(blockX+scrollPixelX/8)/4+(blockY+scrollPixelY/8)/4*0x08]
 	}
 
 	var pallete byte
@@ -95,7 +98,7 @@ func (ppu *PPU) outputBGRect(x, y uint) (rect pixel.Rect) {
 		pallete = (attr & 0xc0) >> 6
 	}
 
-	rect = pixel.R(float64(spriteNum*8), float64(32-pallete*8), float64((spriteNum+1)*8), float64(32-(pallete+1)*8))
+	rect = pixel.R(float64(spriteNum*8+indexX), float64(32-uint(pallete)*8-indexY), float64(spriteNum*8+indexX+1), float64(32-uint(pallete)*8-indexY-1))
 	return rect
 }
 

@@ -17,7 +17,6 @@ func (cpu *CPU) Render() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "nes-emulator",
 		Bounds: pixel.R(0, 0, width, height),
-		VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
@@ -37,11 +36,11 @@ func (cpu *CPU) Render() {
 	for !win.Closed() {
 		// BG描画
 		BGBatch.Clear()
-		for y := 0; y < height/8; y++ {
-			for x := 0; x < width/8; x++ {
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
 				rect := cpu.PPU.outputBGRect(uint(x), uint(y))
 				sprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
-				matrix := pixel.IM.Moved(pixel.V(float64(x*8+4), float64(height-4-y*8)))
+				matrix := pixel.IM.Moved(pixel.V(float64(x), float64(height-y)))
 				sprite.Draw(BGBatch, matrix)
 			}
 		}
