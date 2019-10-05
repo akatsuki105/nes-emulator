@@ -461,6 +461,7 @@ func (cpu *CPU) LDA(addr uint16) {
 	switch addr {
 	case 0x2002:
 		cpu.Reg.A = cpu.FetchMemory8(addr)
+		cpu.PPU.scrollFlag = false
 		cpu.clearVBlank()
 	case 0x2007:
 		cpu.Reg.A = cpu.PPU.RAM[cpu.PPU.ptr]
@@ -481,6 +482,7 @@ func (cpu *CPU) LDX(addr uint16) {
 	switch addr {
 	case 0x2002:
 		cpu.Reg.X = cpu.FetchMemory8(addr)
+		cpu.PPU.scrollFlag = false
 		cpu.clearVBlank()
 	case 0x2007:
 		cpu.Reg.X = cpu.PPU.RAM[cpu.PPU.ptr]
@@ -501,6 +503,7 @@ func (cpu *CPU) LDY(addr uint16) {
 	switch addr {
 	case 0x2002:
 		cpu.Reg.Y = cpu.FetchMemory8(addr)
+		cpu.PPU.scrollFlag = false
 		cpu.clearVBlank()
 	case 0x2007:
 		cpu.Reg.Y = cpu.PPU.RAM[cpu.PPU.ptr]
@@ -525,8 +528,12 @@ func (cpu *CPU) STA(addr uint16) {
 		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.A
 		cpu.RAM[0x2003]++
 	case 0x2005:
-		cpu.PPU.scroll[0] = cpu.PPU.scroll[1]
-		cpu.PPU.scroll[1] = cpu.Reg.A
+		if cpu.PPU.scrollFlag {
+			cpu.PPU.scroll[1] = cpu.Reg.A
+		} else {
+			cpu.PPU.scroll[0] = cpu.Reg.A
+			cpu.PPU.scrollFlag = true
+		}
 	case 0x2006:
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.A))
 	case 0x2007:
@@ -552,8 +559,12 @@ func (cpu *CPU) STX(addr uint16) {
 		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.X
 		cpu.RAM[0x2003]++
 	case 0x2005:
-		cpu.PPU.scroll[0] = cpu.PPU.scroll[1]
-		cpu.PPU.scroll[1] = cpu.Reg.X
+		if cpu.PPU.scrollFlag {
+			cpu.PPU.scroll[1] = cpu.Reg.X
+		} else {
+			cpu.PPU.scroll[0] = cpu.Reg.X
+			cpu.PPU.scrollFlag = true
+		}
 	case 0x2006:
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.X))
 	case 0x2007:
@@ -579,8 +590,12 @@ func (cpu *CPU) STY(addr uint16) {
 		cpu.PPU.sRAM[cpu.RAM[0x2003]] = cpu.Reg.Y
 		cpu.RAM[0x2003]++
 	case 0x2005:
-		cpu.PPU.scroll[0] = cpu.PPU.scroll[1]
-		cpu.PPU.scroll[1] = cpu.Reg.Y
+		if cpu.PPU.scrollFlag {
+			cpu.PPU.scroll[1] = cpu.Reg.Y
+		} else {
+			cpu.PPU.scroll[0] = cpu.Reg.Y
+			cpu.PPU.scrollFlag = true
+		}
 	case 0x2006:
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.Y))
 	case 0x2007:
@@ -606,6 +621,8 @@ func (cpu *CPU) setVRAM(value byte) {
 		cpu.PPU.BGPalleteOK = false
 	} else if cpu.PPU.ptr == 0x3f1f {
 		cpu.PPU.SPRPalleteOK = false
+	} else if !cpu.PPU.mirror && ((0x2000 <= cpu.PPU.ptr && cpu.PPU.ptr < 0x2400) || (0x2800 <= cpu.PPU.ptr && cpu.PPU.ptr < 0x2c00)) {
+		cpu.PPU.RAM[cpu.PPU.ptr+0x0400] = value
 	}
 	cpu.PPU.ptr += cpu.getVRAMDelta()
 }

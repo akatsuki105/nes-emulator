@@ -77,7 +77,7 @@ func (cpu *CPU) Render() {
 
 // VBlank VBlankを起こす
 func (cpu *CPU) VBlank() {
-	for range time.Tick(20 * time.Millisecond) {
+	for range time.Tick(5 * time.Millisecond) {
 		cpu.mutex.Lock()
 		cpu.setVBlank()
 		cpu.mutex.Unlock()

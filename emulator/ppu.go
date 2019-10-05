@@ -17,6 +17,7 @@ type PPU struct {
 	mirror       bool        // 0: 水平ミラー, 1:垂直ミラー
 	ptr          uint16      // PPURAMのポインタ 0x2006に書き込まれたとき更新される
 	scroll       [2]uint8    // (水平スクロールpixel, 垂直スクロールpixel)
+	scrollFlag   bool        // trueなら2回目として書き込みする
 	BGBuf        *pixel.PictureData
 	BGPalleteOK  bool
 	SPRBuf       *pixel.PictureData
@@ -69,18 +70,18 @@ func (ppu *PPU) outputBGRect(x, y uint) (rect pixel.Rect) {
 	scrollPixelX, scrollPixelY := uint(ppu.scroll[0]), uint(ppu.scroll[1])
 	var spriteNum uint
 	var attr byte
-	if scrollPixelX/8+x > 32 && scrollPixelY/8+y > 30 {
+	if scrollPixelX+x*8 > width && scrollPixelY+y*8 > height {
 		spriteNum = uint(ppu.RAM[0x2c00+(x-scrollPixelX/8)+(y-scrollPixelY/8)*0x20])
-		attr = ppu.RAM[0x2fc0+(x-scrollPixelX/8)+(y-scrollPixelY/8)*0x08]
-	} else if scrollPixelX/8+x > 32 && scrollPixelY/8+y <= 30 {
-		spriteNum = uint(ppu.RAM[0x2400+(x-scrollPixelX/8)+y*0x20])
-		attr = ppu.RAM[0x27c0+(x-scrollPixelX/8)+y*0x08]
-	} else if scrollPixelX/8+x <= 32 && scrollPixelY/8+y > 30 {
+		attr = ppu.RAM[0x2fc0+(x-scrollPixelX/8)/4+(y-scrollPixelY/8)/4*0x08]
+	} else if scrollPixelX+x*8 > width && scrollPixelY+y*8 <= height {
+		spriteNum = uint(ppu.RAM[0x2400+(x-(width/8-scrollPixelX/8))+y*0x20])
+		attr = ppu.RAM[0x27c0+(x-(width/8-scrollPixelX/8))/4+(y+scrollPixelY/8/4)*0x08]
+	} else if scrollPixelX+x*8 <= width && scrollPixelY+y*8 > height {
 		spriteNum = uint(ppu.RAM[0x2800+x+(y-scrollPixelY/8)*0x20])
-		attr = ppu.RAM[0x2bc0+x+(y-scrollPixelY/8)*0x08]
+		attr = ppu.RAM[0x2bc0+(x+scrollPixelX/8)/4+(y-scrollPixelY/8)/4*0x08]
 	} else {
-		spriteNum = uint(ppu.RAM[0x2000+x+y*0x20])
-		attr = ppu.RAM[0x23c0+(x/4)+(y/4)*0x08]
+		spriteNum = uint(ppu.RAM[0x2000+(x+scrollPixelX/8)+(y+scrollPixelY/8)*0x20])
+		attr = ppu.RAM[0x23c0+(x+scrollPixelX/8)/4+(y+scrollPixelY/8)/4*0x08]
 	}
 
 	var pallete byte
