@@ -35,31 +35,39 @@ func (cpu *CPU) Render() {
 	go cpu.VBlank()
 
 	for !win.Closed() {
-		// BG描画
-		BGBatch.Clear()
-		for y := 0; y < height/8; y++ {
-			for x := 0; x < width/8; x++ {
-				rect := cpu.PPU.outputBGRect(uint(x), uint(y))
-				sprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
-				matrix := pixel.IM.Moved(pixel.V(float64(x*8+4), float64(height-4-y*8)))
-				sprite.Draw(BGBatch, matrix)
-			}
-		}
-		BGBatch.Draw(win)
-
-		// SPR描画
-		SPRBatch.Clear()
+		// SPR探索
+		var pixel2sprite map[uint16]([2]byte)
+		pixel2sprite = map[uint16]([2]byte){}
 		for i := 0; i < 64; i++ {
 			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])
 			spriteNum := cpu.PPU.sRAM[i*4+1]
 			attr := cpu.PPU.sRAM[i*4+2]
-			if attr&0x20 == 0 {
-				rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
-				sprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
-				matrix := pixel.IM.Moved(pixel.V(float64(pixelX+4), float64(height-4-pixelY)))
-				sprite.Draw(SPRBatch, matrix)
+			pixel2sprite[(uint16(pixelY)<<8)|uint16(pixelX)] = [2]byte{spriteNum, attr}
+		}
+
+		// BG・SPR描画
+		BGBatch.Clear()
+		SPRBatch.Clear()
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
+				sprite, ok := pixel2sprite[(uint16(y)<<8)|uint16(x)]
+				if ok {
+					spriteNum, attr := sprite[0], sprite[1]
+					if attr&0x20 == 0 {
+						rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
+						SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
+						matrix := pixel.IM.Moved(pixel.V(float64(x+4), float64(height-4-y)))
+						SPRSprite.Draw(SPRBatch, matrix)
+					}
+				}
+
+				rect := cpu.PPU.outputBGRect(uint(x), uint(y))
+				BGSprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
+				matrix := pixel.IM.Moved(pixel.V(float64(x), float64(height-y)))
+				BGSprite.Draw(BGBatch, matrix)
 			}
 		}
+		BGBatch.Draw(win)
 		SPRBatch.Draw(win)
 
 		win.Update()
