@@ -71,14 +71,14 @@ func (ppu *PPU) outputBGRect(x, y uint) (rect pixel.Rect) {
 	var spriteNum uint
 	var attr byte
 	if scrollPixelX+x*8 > width && scrollPixelY+y*8 > height {
-		spriteNum = uint(ppu.RAM[0x2c00+(x-scrollPixelX/8)+(y-scrollPixelY/8)*0x20])
-		attr = ppu.RAM[0x2fc0+(x-scrollPixelX/8)/4+(y-scrollPixelY/8)/4*0x08]
+		spriteNum = uint(ppu.RAM[0x2c00+(x-(width/8-scrollPixelX/8))+(y-(height/8-scrollPixelY/8))*0x20])
+		attr = ppu.RAM[0x2fc0+(x-(width/8-scrollPixelX/8))/4+(y-(height/8-scrollPixelY/8))/4*0x08]
 	} else if scrollPixelX+x*8 > width && scrollPixelY+y*8 <= height {
 		spriteNum = uint(ppu.RAM[0x2400+(x-(width/8-scrollPixelX/8))+y*0x20])
 		attr = ppu.RAM[0x27c0+(x-(width/8-scrollPixelX/8))/4+(y+scrollPixelY/8/4)*0x08]
 	} else if scrollPixelX+x*8 <= width && scrollPixelY+y*8 > height {
-		spriteNum = uint(ppu.RAM[0x2800+x+(y-scrollPixelY/8)*0x20])
-		attr = ppu.RAM[0x2bc0+(x+scrollPixelX/8)/4+(y-scrollPixelY/8)/4*0x08]
+		spriteNum = uint(ppu.RAM[0x2800+x+(y-(height/8-scrollPixelY/8))*0x20])
+		attr = ppu.RAM[0x2bc0+(x+scrollPixelX/8)/4+(y-(height/8-scrollPixelY/8))/4*0x08]
 	} else {
 		spriteNum = uint(ppu.RAM[0x2000+(x+scrollPixelX/8)+(y+scrollPixelY/8)*0x20])
 		attr = ppu.RAM[0x23c0+(x+scrollPixelX/8)/4+(y+scrollPixelY/8)/4*0x08]
