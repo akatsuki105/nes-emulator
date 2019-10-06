@@ -121,7 +121,7 @@ func (ppu *PPU) CacheSPR() {
 					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
 					// パレットミラーリング
 					if p == 0 || p == 4 || p == 8 || p == 12 {
-						p -= 16
+						p -= 0x10
 					}
 					R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
 					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)), color.RGBA{R, G, B, 0})
@@ -134,10 +134,10 @@ func (ppu *PPU) CacheSPR() {
 					color0 := (spriteBytes[7-h] & (0x01 << (7 - w))) >> (7 - w)
 					color1 := ((spriteBytes[15-h] & (0x01 << (7 - w))) >> (7 - w)) << 1
 
-					p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
+					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
 					// パレットミラーリング
 					if p == 0 || p == 4 || p == 8 || p == 12 {
-						p -= 16
+						p -= 0x10
 					}
 					R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
 					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+32), color.RGBA{R, G, B, 0})
@@ -150,10 +150,10 @@ func (ppu *PPU) CacheSPR() {
 					color0 := (spriteBytes[h] & (0x01 << w)) >> w
 					color1 := (spriteBytes[h+8] & (0x01 << w) >> w) << 1
 
-					p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
+					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
 					// パレットミラーリング
 					if p == 0 || p == 4 || p == 8 || p == 12 {
-						p -= 16
+						p -= 0x10
 					}
 					R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
 					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+64), color.RGBA{R, G, B, 0})
@@ -166,10 +166,10 @@ func (ppu *PPU) CacheSPR() {
 					color0 := (spriteBytes[7-h] & (0x01 << w)) >> w
 					color1 := (spriteBytes[15-h] & (0x01 << w) >> w) << 1
 
-					p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
+					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
 					// パレットミラーリング
 					if p == 0 || p == 4 || p == 8 || p == 12 {
-						p -= 16
+						p -= 0x10
 					}
 					R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
 					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+96), color.RGBA{R, G, B, 0})
