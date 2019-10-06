@@ -237,18 +237,18 @@ func (cpu *CPU) JSR(addr uint16) {
 	upper := byte((cpu.Reg.PC - 1) >> 8)
 	lower := byte((cpu.Reg.PC - 1))
 	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), upper)
-	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 1), lower)
-	cpu.Reg.S += 2
+	cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) - 1), lower)
+	cpu.Reg.S -= 2
 	cpu.Reg.PC = addr
 }
 
 // RTS Return from Subroutine
 func (cpu *CPU) RTS(addr uint16) {
 	if addr == null {
-		lower := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
-		cpu.Reg.S--
-		upper := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
-		cpu.Reg.S--
+		lower := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) + 1)))
+		cpu.Reg.S++
+		upper := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) + 1)))
+		cpu.Reg.S++
 		cpu.Reg.PC = (upper << 8) | lower
 		cpu.Reg.PC++
 	}
@@ -269,9 +269,9 @@ func (cpu *CPU) BRK(addr uint16) {
 			upper0 := byte((cpu.Reg.PC) >> 8)
 			lower0 := byte((cpu.Reg.PC))
 			cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), upper0)
-			cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 1), lower0)
-			cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 2), cpu.Reg.P)
-			cpu.Reg.S += 3
+			cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) - 1), lower0)
+			cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) - 2), cpu.Reg.P)
+			cpu.Reg.S -= 3
 
 			cpu.Reg.P = cpu.Reg.P | 0x04 // set I Flag
 
@@ -286,14 +286,14 @@ func (cpu *CPU) BRK(addr uint16) {
 func (cpu *CPU) RTI(addr uint16) {
 	if addr == null {
 		// ステータスレジスタをpop
-		SR := cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1))
-		cpu.Reg.S--
+		SR := cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) + 1))
+		cpu.Reg.S++
 		cpu.Reg.P = SR
 		// PCをpop
-		lower := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
-		cpu.Reg.S--
-		upper := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) - 1)))
-		cpu.Reg.S--
+		lower := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) + 1)))
+		cpu.Reg.S++
+		upper := uint16(cpu.FetchMemory8((0x100 + uint16(cpu.Reg.S) + 1)))
+		cpu.Reg.S++
 		cpu.Reg.PC = (upper << 8) | lower // ここでPCにリターンしているかつ割り込みなのでインクリメントは必要ない
 
 		cpu.RAM[0x2000] = cpu.RAM[0x2000] | 0x80 // allow NMI
@@ -311,9 +311,9 @@ func (cpu *CPU) NMI(addr uint16) {
 		lower0 := byte((cpu.Reg.PC))
 		upper0 := byte((cpu.Reg.PC) >> 8)
 		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), upper0)
-		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 1), lower0)
-		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) + 2), cpu.Reg.P)
-		cpu.Reg.S += 3
+		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) - 1), lower0)
+		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S) - 2), cpu.Reg.P)
+		cpu.Reg.S -= 3
 
 		cpu.Reg.P = cpu.Reg.P | 0x04 // set I Flag
 
@@ -677,7 +677,7 @@ func (cpu *CPU) TXS(addr uint16) {
 func (cpu *CPU) PHA(addr uint16) {
 	if addr == null {
 		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), cpu.Reg.A)
-		cpu.Reg.S++
+		cpu.Reg.S--
 	}
 }
 
@@ -686,7 +686,7 @@ func (cpu *CPU) PLA(addr uint16) {
 	if addr == null {
 		value := cpu.FetchMemory8(0x0100 + uint16(cpu.Reg.S) - 1)
 		cpu.Reg.A = value
-		cpu.Reg.S--
+		cpu.Reg.S++
 
 		cpu.FlagN(value)
 		cpu.FlagZ(value)
@@ -697,16 +697,16 @@ func (cpu *CPU) PLA(addr uint16) {
 func (cpu *CPU) PHP(addr uint16) {
 	if addr == null {
 		cpu.SetMemory8((0x100 + uint16(cpu.Reg.S)), cpu.Reg.P)
-		cpu.Reg.S++
+		cpu.Reg.S--
 	}
 }
 
 // PLP Pull P from stack
 func (cpu *CPU) PLP(addr uint16) {
 	if addr == null {
-		value := cpu.FetchMemory8(0x0100 + uint16(cpu.Reg.S) - 1)
+		value := cpu.FetchMemory8(0x0100 + uint16(cpu.Reg.S) + 1)
 		cpu.Reg.P = value // pullがフラグのセットになっている
-		cpu.Reg.S--
+		cpu.Reg.S++
 	}
 }
 

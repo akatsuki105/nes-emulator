@@ -32,7 +32,7 @@ type CPU struct {
 
 // InitReg レジスタの初期化
 func (cpu *CPU) InitReg() {
-	cpu.Reg.S = 0x00 // スタックは0x100から下に伸びる
+	cpu.Reg.S = 0xff // スタックは0x1ffから上に伸びる
 	cpu.Reg.PC = 0x8000
 }
 
