@@ -42,7 +42,7 @@ func (cpu *CPU) Render() {
 		var pixel2sprite map[uint16]([2]byte)
 		pixel2sprite = map[uint16]([2]byte){}
 		for i := 0; i < 64; i++ {
-			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])+1
+			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])
 			spriteNum := cpu.PPU.sRAM[i*4+1]
 			attr := cpu.PPU.sRAM[i*4+2]
 			pixel2sprite[(uint16(pixelY)<<8)|uint16(pixelX)] = [2]byte{spriteNum, attr}
@@ -72,7 +72,7 @@ func (cpu *CPU) Render() {
 								if attr&0x20 == 0 {
 									rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
 									SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
-									matrix := pixel.IM.Moved(pixel.V(float64(x*8+indexX), float64(height-y*8-indexY)))
+									matrix := pixel.IM.Moved(pixel.V(float64(x*8+indexX+4), float64(height-y*8-indexY-4)))
 									lineMutex.Lock()
 									SPRSprite.Draw(SPRBatch, matrix)
 									lineMutex.Unlock()
@@ -87,7 +87,7 @@ func (cpu *CPU) Render() {
 					scrollPixelX, scrollPixelY := cpu.PPU.scroll[0], cpu.PPU.scroll[1]
 					rect := cpu.PPU.outputBGRect(uint(x), uint(y), uint(scrollPixelX), uint(scrollPixelY))
 					BGSprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
-					matrix := pixel.IM.Moved(pixel.V(float64(uint8(x*8)-(scrollPixelX%8)), float64(uint8(height-y*8)-scrollPixelY%8)))
+					matrix := pixel.IM.Moved(pixel.V(float64(uint8(x*8)-(scrollPixelX%8)+4), float64(uint8(height-y*8)-scrollPixelY%8)-4))
 
 					lineMutex.Lock()
 					BGSprite.Draw(BGBatch, matrix)
