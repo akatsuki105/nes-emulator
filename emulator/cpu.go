@@ -3,7 +3,6 @@ package emulator
 import (
 	"fmt"
 	"sync"
-	"time"
 )
 
 var (
@@ -69,7 +68,7 @@ func (cpu *CPU) LoadROM(rom []byte) {
 
 // MainLoop CPUのメインサイクル
 func (cpu *CPU) MainLoop() {
-	for range time.Tick(1 * time.Nanosecond) {
+	for {
 		cpu.mutex.Lock()
 		opcode := cpu.FetchCode8(0)
 		instruction, addressing := instructions[opcode][0], instructions[opcode][1]
