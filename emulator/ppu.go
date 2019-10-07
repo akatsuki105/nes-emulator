@@ -64,31 +64,25 @@ func (ppu *PPU) CacheBG() {
 	ppu.BGPalleteOK = true
 }
 
-// renderBlock 画面の(x,y)pixelのRGBAの出力を行う
+// outputBGRect 画面の(x,y)ブロックのRGBAの出力を行う
 func (ppu *PPU) outputBGRect(x, y, scrollPixelX, scrollPixelY uint) (rect pixel.Rect) {
-	indexY := y % 8
-
 	var spriteNum uint
 	var attr byte
 
 	if scrollPixelX+x > width && scrollPixelY+y > height {
 		spriteNum = uint(ppu.RAM[0x2c00+(x-scrollPixelX/8)+(y-scrollPixelY/8)*0x20])
 		attr = ppu.RAM[0x2fc0+(x-scrollPixelX/8)/4+(y-scrollPixelY/8)/4*0x08]
-
-	} else if scrollPixelX+x > width && scrollPixelY+y <= height {
-		blockX, blockY := (x*8-width+scrollPixelX)/8, (y+scrollPixelY)/8 // x, y がスクリーン原点を(0, 0)ブロックとしたときどのブロックにいるか
+	} else if scrollPixelX+x*8 > width && scrollPixelY+y*8 <= height {
+		blockX, blockY := (x*8-width+scrollPixelX)/8, y+scrollPixelY/8
 		spriteNum = uint(ppu.RAM[0x2400+blockX+blockY*0x20])
 		attr = ppu.RAM[0x27c0+blockX/4+blockY/4*0x08]
-
 	} else if scrollPixelX+x <= width && scrollPixelY+y > height {
 		spriteNum = uint(ppu.RAM[0x2800+x+(y-scrollPixelY/8)*0x20])
 		attr = ppu.RAM[0x2bc0+(x+scrollPixelX/8)/4+(y-scrollPixelY/8)/4*0x08]
-
 	} else {
-		blockX, blockY := x+scrollPixelX/8, (y+scrollPixelY)/8
+		blockX, blockY := x+scrollPixelX/8, y+scrollPixelY/8
 		spriteNum = uint(ppu.RAM[0x2000+blockX+blockY*0x20])
 		attr = ppu.RAM[0x23c0+blockX/4+blockY/4*0x08]
-
 	}
 
 	var pallete byte
@@ -102,7 +96,7 @@ func (ppu *PPU) outputBGRect(x, y, scrollPixelX, scrollPixelY uint) (rect pixel.
 		pallete = (attr & 0xc0) >> 6
 	}
 
-	rect = pixel.R(float64(spriteNum*8), float64(32-uint(pallete)*8-indexY), float64(spriteNum*8+8), float64(32-uint(pallete)*8-indexY-1))
+	rect = pixel.R(float64(spriteNum*8), float64(32-uint(pallete)*8), float64(spriteNum*8+8), float64(32-uint(pallete)*8-8))
 	return rect
 }
 
