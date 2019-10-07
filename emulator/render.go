@@ -1,8 +1,6 @@
 package emulator
 
 import (
-	"time"
-
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 )
@@ -32,8 +30,6 @@ func (cpu *CPU) Render() {
 	cpu.PPU.CacheSPR()
 	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 
-	go cpu.VBlank()
-
 	for !win.Closed() {
 		// SPR探索
 		var pixel2sprite map[uint16]([2]byte)
@@ -48,23 +44,33 @@ func (cpu *CPU) Render() {
 		// BG・SPR描画
 		BGBatch.Clear()
 		SPRBatch.Clear()
-		for y := 0; y < height; y++ {
-			for x := 0; x < width; x++ {
-				sprite, ok := pixel2sprite[(uint16(y)<<8)|uint16(x)]
-				if ok {
-					spriteNum, attr := sprite[0], sprite[1]
-					if attr&0x20 == 0 {
-						rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
-						SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
-						matrix := pixel.IM.Moved(pixel.V(float64(x+4), float64(height-4-y)))
-						SPRSprite.Draw(SPRBatch, matrix)
+		for y := 0; y < height+1; y++ {
+			cpu.RAM[0x2002] &= 0xbf
+			if y < height {
+				for x := 0; x < width; x++ {
+					sprite, ok := pixel2sprite[(uint16(y)<<8)|uint16(x)]
+					if ok {
+						spriteNum, attr := sprite[0], sprite[1]
+						if spriteNum == 0 {
+							cpu.RAM[0x2002] |= 0x40
+						}
+						if attr&0x20 == 0 {
+							rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
+							SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
+							matrix := pixel.IM.Moved(pixel.V(float64(x), float64(height-y)))
+							SPRSprite.Draw(SPRBatch, matrix)
+						}
 					}
-				}
 
-				rect := cpu.PPU.outputBGRect(uint(x), uint(y))
-				BGSprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
-				matrix := pixel.IM.Moved(pixel.V(float64(x), float64(height-y)))
-				BGSprite.Draw(BGBatch, matrix)
+					rect := cpu.PPU.outputBGRect(uint(x), uint(y))
+					BGSprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
+					matrix := pixel.IM.Moved(pixel.V(float64(x), float64(height-y)))
+					BGSprite.Draw(BGBatch, matrix)
+				}
+			} else if y == height {
+				cpu.mutex.Lock()
+				cpu.setVBlank()
+				cpu.mutex.Unlock()
 			}
 		}
 		BGBatch.Draw(win)
@@ -80,14 +86,6 @@ func (cpu *CPU) Render() {
 			cpu.PPU.CacheSPR()
 			SPRBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 		}
-	}
-}
 
-// VBlank VBlankを起こす
-func (cpu *CPU) VBlank() {
-	for range time.Tick(5 * time.Millisecond) {
-		cpu.mutex.Lock()
-		cpu.setVBlank()
-		cpu.mutex.Unlock()
 	}
 }
