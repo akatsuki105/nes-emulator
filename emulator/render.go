@@ -54,28 +54,39 @@ func (cpu *CPU) Render() {
 		for y := 0; y < height; y++ {
 			cpu.RAM[0x2002] &= 0xbf
 			if y < height {
-				lineWait.Add(width)
-				for x := 0; x < width; x++ {
+				lineWait.Add(width / 8)
+				for x := 0; x < width/8; x++ {
 					go func(x int) {
-						sprite, ok := pixel2sprite[(uint16(y)<<8)|uint16(x)]
-						if ok {
-							spriteNum, attr := sprite[0], sprite[1]
-							if spriteNum == 0 {
-								cpu.RAM[0x2002] |= 0x40
-							}
-							if attr&0x20 == 0 {
-								rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
-								SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
-								matrix := pixel.IM.Moved(pixel.V(float64(x), float64(height-y)))
-								lineMutex.Lock()
-								SPRSprite.Draw(SPRBatch, matrix)
-								lineMutex.Unlock()
-							}
+						var spriteWait sync.WaitGroup
+						// sprite 描画
+						spriteWait.Add(8)
+						for i := 0; i < 8; i++ {
+							go func(i int) {
+								sprite, ok := pixel2sprite[(uint16(y)<<8)|uint16(x*8+i)]
+								if ok {
+									spriteNum, attr := sprite[0], sprite[1]
+									if spriteNum == 0 {
+										cpu.RAM[0x2002] |= 0x40
+									}
+									if attr&0x20 == 0 {
+										rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
+										SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
+										matrix := pixel.IM.Moved(pixel.V(float64(x*8+i), float64(height-y)))
+										lineMutex.Lock()
+										SPRSprite.Draw(SPRBatch, matrix)
+										lineMutex.Unlock()
+									}
+								}
+								spriteWait.Done()
+							}(i)
 						}
+						spriteWait.Wait()
 
-						rect := cpu.PPU.outputBGRect(uint(x), uint(y))
+						// BG描画
+						scrollPixelX, scrollPixelY := cpu.PPU.scroll[0], cpu.PPU.scroll[1]
+						rect := cpu.PPU.outputBGRect(uint(x), uint(y), uint(scrollPixelX), uint(scrollPixelY))
 						BGSprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
-						matrix := pixel.IM.Moved(pixel.V(float64(x), float64(height-y)))
+						matrix := pixel.IM.Moved(pixel.V(float64(uint8(x*8)-(scrollPixelX%8)), float64(height-y)))
 
 						lineMutex.Lock()
 						BGSprite.Draw(BGBatch, matrix)
