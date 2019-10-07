@@ -14,7 +14,7 @@ type Joypad struct {
 
 // handleJoypad キー入力とジョイパッド入力の橋渡しを行う 今回は1Pのみ
 func (cpu *CPU) handleJoypad(win *pixelgl.Window) {
-	for range time.Tick(1 * time.Millisecond) {
+	for range time.Tick(20 * time.Millisecond) {
 		// ジョイパッド入力処理
 		if win.Pressed(pixelgl.KeyX) {
 			cpu.joypad1.cmd[0] = 1 // A
