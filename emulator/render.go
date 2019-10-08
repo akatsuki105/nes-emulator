@@ -1,6 +1,7 @@
 package emulator
 
 import (
+	"math"
 	"sync"
 
 	"github.com/faiface/pixel"
@@ -8,8 +9,9 @@ import (
 )
 
 const (
-	width  = 256
-	height = 240
+	width    = 256
+	height   = 240
+	overload = 14
 )
 
 var (
@@ -22,20 +24,19 @@ func (cpu *CPU) Render() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "nes-emulator",
 		Bounds: pixel.R(0, 0, width, height),
-		VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	go cpu.handleJoypad(win)
-
 	cpu.PPU.CacheBG()
 	BGBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
 
 	cpu.PPU.CacheSPR()
 	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
+
+	go cpu.handleJoypad(win)
 
 	for !win.Closed() {
 		// SPR探索
@@ -53,10 +54,19 @@ func (cpu *CPU) Render() {
 		SPRBatch.Clear()
 		for y := 0; y < height/8; y++ {
 			cpu.RAM[0x2002] &= 0xbf
-			lineWait.Add(width / 8)
-			for x := 0; x < width/8; x++ {
-				go func(x int) {
 
+			go func() {
+				for i := 0; i < 8; i++ {
+					for j := 0; j < int(math.Ceil(341/overload)); j++ {
+						cpu.exec()
+					}
+				}
+			}()
+
+			lineWait.Add(width / 8)
+
+			for x := 0; x < width/8; x++ {
+				go func(x, y int) {
 					// sprite 描画
 					var spriteWait sync.WaitGroup
 					spriteWait.Add(64)
@@ -94,7 +104,7 @@ func (cpu *CPU) Render() {
 					lineMutex.Unlock()
 
 					lineWait.Done()
-				}(x)
+				}(x, y)
 			}
 			lineWait.Wait()
 		}
@@ -102,6 +112,12 @@ func (cpu *CPU) Render() {
 		cpu.mutex.Lock()
 		cpu.setVBlank()
 		cpu.mutex.Unlock()
+
+		for i := 0; i < 22; i++ {
+			for j := 0; j < int(math.Ceil(341/overload)); j++ {
+				cpu.exec()
+			}
+		}
 
 		BGBatch.Draw(win)
 		SPRBatch.Draw(win)

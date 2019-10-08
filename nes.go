@@ -16,8 +16,6 @@ func main() {
 	cpu.InitReg()
 	cpu.LoadROM(bytes)
 
-	go cpu.MainLoop()
-
 	pixelgl.Run(cpu.Render)
 }
 

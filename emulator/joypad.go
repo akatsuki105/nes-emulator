@@ -1,6 +1,7 @@
 package emulator
 
 import (
+	"sync"
 	"time"
 
 	"github.com/faiface/pixel/pixelgl"
@@ -12,33 +13,30 @@ type Joypad struct {
 	cmd [8]byte
 }
 
+var keyList = [8]pixelgl.Button{
+	pixelgl.KeyX,
+	pixelgl.KeyZ,
+	pixelgl.KeyEnter,
+	pixelgl.KeyRightShift,
+	pixelgl.KeyUp,
+	pixelgl.KeyDown,
+	pixelgl.KeyLeft,
+	pixelgl.KeyRight,
+}
+
 // handleJoypad キー入力とジョイパッド入力の橋渡しを行う 今回は1Pのみ
 func (cpu *CPU) handleJoypad(win *pixelgl.Window) {
-	for range time.Tick(10 * time.Millisecond) {
-		// ジョイパッド入力処理
-		if win.Pressed(pixelgl.KeyX) {
-			cpu.joypad1.cmd[0] = 1 // A
+	var wait sync.WaitGroup
+	for range time.Tick(time.Millisecond) {
+		wait.Add(8)
+		for i, key := range keyList {
+			go func(i int, key pixelgl.Button) {
+				if win.Pressed(key) {
+					cpu.joypad1.cmd[i] = 1 // 右
+				}
+				wait.Done()
+			}(i, key)
 		}
-		if win.Pressed(pixelgl.KeyZ) {
-			cpu.joypad1.cmd[1] = 1 // B
-		}
-		if win.Pressed(pixelgl.KeyEnter) {
-			cpu.joypad1.cmd[2] = 1 // START
-		}
-		if win.Pressed(pixelgl.KeyRightShift) {
-			cpu.joypad1.cmd[3] = 1 // SELECT
-		}
-		if win.Pressed(pixelgl.KeyUp) {
-			cpu.joypad1.cmd[4] = 1 // 上
-		}
-		if win.Pressed(pixelgl.KeyDown) {
-			cpu.joypad1.cmd[5] = 1 // 下
-		}
-		if win.Pressed(pixelgl.KeyLeft) {
-			cpu.joypad1.cmd[6] = 1 // 左
-		}
-		if win.Pressed(pixelgl.KeyRight) {
-			cpu.joypad1.cmd[7] = 1 // 右
-		}
+		wait.Wait()
 	}
 }

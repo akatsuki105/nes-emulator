@@ -1,5 +1,10 @@
 package emulator
 
+import (
+	"sync"
+	"time"
+)
+
 // ==============================================  演算  ==============================================
 
 // ADC Add M to A with C (A + M + C -> A)
@@ -467,6 +472,7 @@ func (cpu *CPU) LDA(addr uint16) {
 		cpu.Reg.A = cpu.PPU.RAM[cpu.PPU.ptr]
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
+		time.Sleep(time.Nanosecond)
 		cpu.Reg.A = cpu.joypad1.cmd[cpu.joypad1.ctr]
 		cpu.joypad1.ctr++
 	default:
@@ -540,9 +546,15 @@ func (cpu *CPU) STA(addr uint16) {
 		cpu.setVRAM(cpu.Reg.A)
 	case spriteDMA:
 		start := uint16(cpu.Reg.A) << 8
+		var wait sync.WaitGroup
+		wait.Add(256)
 		for i := 0; i < 256; i++ {
-			cpu.PPU.sRAM[i] = cpu.FetchMemory8(start + uint16(i))
+			go func(i int) {
+				cpu.PPU.sRAM[i] = cpu.FetchMemory8(start + uint16(i))
+				wait.Done()
+			}(i)
 		}
+		wait.Wait()
 	case joypad1:
 		cpu.joypad1.ctr = 0
 		for i := 0; i < 8; i++ {
@@ -571,9 +583,15 @@ func (cpu *CPU) STX(addr uint16) {
 		cpu.setVRAM(cpu.Reg.X)
 	case spriteDMA:
 		start := uint16(cpu.Reg.X) << 8
+		var wait sync.WaitGroup
+		wait.Add(256)
 		for i := 0; i < 256; i++ {
-			cpu.PPU.sRAM[i] = cpu.FetchMemory8(start + uint16(i))
+			go func(i int) {
+				cpu.PPU.sRAM[i] = cpu.FetchMemory8(start + uint16(i))
+				wait.Done()
+			}(i)
 		}
+		wait.Wait()
 	case joypad1:
 		cpu.joypad1.ctr = 0
 		for i := 0; i < 8; i++ {
@@ -602,9 +620,15 @@ func (cpu *CPU) STY(addr uint16) {
 		cpu.setVRAM(cpu.Reg.Y)
 	case spriteDMA:
 		start := uint16(cpu.Reg.Y) << 8
+		var wait sync.WaitGroup
+		wait.Add(256)
 		for i := 0; i < 256; i++ {
-			cpu.PPU.sRAM[i] = cpu.FetchMemory8(start + uint16(i))
+			go func(i int) {
+				cpu.PPU.sRAM[i] = cpu.FetchMemory8(start + uint16(i))
+				wait.Done()
+			}(i)
 		}
+		wait.Wait()
 	case joypad1:
 		cpu.joypad1.ctr = 0
 		for i := 0; i < 8; i++ {
