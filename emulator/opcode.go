@@ -708,7 +708,7 @@ func (cpu *CPU) PHA(addr uint16) {
 // PLA Pull A from stack
 func (cpu *CPU) PLA(addr uint16) {
 	if addr == null {
-		value := cpu.FetchMemory8(0x0100 + uint16(cpu.Reg.S) - 1)
+		value := cpu.FetchMemory8(0x0100 + uint16(cpu.Reg.S) + 1)
 		cpu.Reg.A = value
 		cpu.Reg.S++
 
