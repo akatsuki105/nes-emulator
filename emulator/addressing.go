@@ -111,9 +111,10 @@ func (cpu *CPU) IndirectIndexedAddressing() (addr uint16) {
 	lower0 := uint16(cpu.FetchCode8(1))
 	addr0 := (upper0 << 8) | (lower0)
 
-	upper1 := uint16(cpu.FetchMemory8(addr0))
-	lower1 := uint16(cpu.FetchMemory8(addr0 + 1))
-	addr = (upper1 << 8) | (lower1 + uint16(cpu.Reg.Y))
+	lower1 := uint16(cpu.FetchMemory8(addr0))
+	upper1 := uint16(cpu.FetchMemory8(addr0 + 1))
+	addr = (upper1 << 8) | lower1
+	addr += uint16(cpu.Reg.Y)
 
 	cpu.Reg.PC += 2
 	return addr
