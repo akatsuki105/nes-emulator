@@ -69,16 +69,22 @@ func (ppu *PPU) outputBGRect(x, y, scrollPixelX, scrollPixelY uint, mainScreen b
 	var spriteNum uint
 	var attr byte
 
-	if mainScreen == 2 {
+	switch mainScreen {
+	case 1:
+		scrollPixelX += width
+	case 2:
+		scrollPixelY += height
+	case 3:
+		scrollPixelX += width
 		scrollPixelY += height
 	}
 
 	var blockX, blockY uint
-	if scrollPixelX+x*8 >= width && scrollPixelY+y*8 >= height {
+	if (scrollPixelX+x*8 >= width && scrollPixelX+x*8 < width*2) && (scrollPixelY+y*8 >= height && scrollPixelY+y*8 < height*2) {
 		blockX, blockY = (x*8-width+scrollPixelX)/8, (y*8-height+scrollPixelY)/8
 		spriteNum = uint(ppu.RAM[0x2c00+blockX+blockY*0x20])
 		attr = ppu.RAM[0x2fc0+blockX/4+blockY/4*0x08]
-	} else if scrollPixelX+x*8 >= width && scrollPixelY+y*8 < height {
+	} else if (scrollPixelX+x*8 >= width && scrollPixelX+x*8 < width*2) && scrollPixelY+y*8 < height {
 		blockX, blockY = (x*8-width+scrollPixelX)/8, y+scrollPixelY/8
 		spriteNum = uint(ppu.RAM[0x2400+blockX+blockY*0x20])
 		attr = ppu.RAM[0x27c0+blockX/4+blockY/4*0x08]

@@ -657,7 +657,11 @@ func (cpu *CPU) setVRAM(value byte) {
 	} else if cpu.PPU.ptr == 0x3f1f {
 		cpu.PPU.SPRPalleteOK = false
 	} else if !cpu.PPU.mirror && ((0x2000 <= cpu.PPU.ptr && cpu.PPU.ptr < 0x2400) || (0x2800 <= cpu.PPU.ptr && cpu.PPU.ptr < 0x2c00)) {
+		// 水平ミラー
 		cpu.PPU.RAM[cpu.PPU.ptr+0x0400] = value
+	} else if cpu.PPU.mirror && (0x2000 <= cpu.PPU.ptr && cpu.PPU.ptr < 0x2800) {
+		// 垂直ミラー
+		cpu.PPU.RAM[cpu.PPU.ptr+0x0800] = value
 	}
 	cpu.PPU.ptr += cpu.getVRAMDelta()
 }
