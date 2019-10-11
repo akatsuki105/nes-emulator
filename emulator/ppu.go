@@ -25,13 +25,15 @@ type PPU struct {
 }
 
 // CacheBG BGのデータをキャッシュする
-func (ppu *PPU) CacheBG() {
+func (cpu *CPU) CacheBG() {
 	img := image.NewRGBA(image.Rect(0, 0, 2048, 32))
+
+	baseAddr := cpu.getBaseAddr("BG")
 
 	for sprite := 0; sprite < 256; sprite++ {
 		var spriteBytes [16]byte
 		for i := 0; i < 16; i++ {
-			spriteBytes[i] = ppu.RAM[uint(sprite)*16+uint(i)]
+			spriteBytes[i] = cpu.PPU.RAM[baseAddr+uint(sprite)*16+uint(i)]
 		}
 
 		for pallete := 0; pallete < 4; pallete++ {
@@ -46,7 +48,7 @@ func (ppu *PPU) CacheBG() {
 						p = 0
 					}
 
-					R, G, B := colors[ppu.RAM[0x3f00+p]][0], colors[ppu.RAM[0x3f00+p]][1], colors[ppu.RAM[0x3f00+p]][2]
+					R, G, B := colors[cpu.PPU.RAM[0x3f00+p]][0], colors[cpu.PPU.RAM[0x3f00+p]][1], colors[cpu.PPU.RAM[0x3f00+p]][2]
 					img.Set((int)(sprite*8+int(x)), (int)(pallete*8+int(y)), color.RGBA{R, G, B, 0})
 				}
 			}
@@ -60,8 +62,8 @@ func (ppu *PPU) CacheBG() {
 
 	tmp, _, _ := image.Decode(buf)
 	pic := pixel.PictureDataFromImage(tmp)
-	ppu.BGBuf = pic
-	ppu.BGPalleteOK = true
+	cpu.PPU.BGBuf = pic
+	cpu.PPU.BGPalleteOK = true
 }
 
 // outputBGRect 画面の(x,y)ブロックのRGBAの出力を行う
@@ -114,13 +116,15 @@ func (ppu *PPU) outputBGRect(x, y, scrollPixelX, scrollPixelY uint, mainScreen b
 }
 
 // CacheSPR スプライトをキャッシュする
-func (ppu *PPU) CacheSPR() {
+func (cpu *CPU) CacheSPR() {
 	img := image.NewRGBA(image.Rect(0, 0, 2048, 128))
+
+	baseAddr := cpu.getBaseAddr("SPR")
 
 	for sprite := 0; sprite < 256; sprite++ {
 		var spriteBytes [16]byte
 		for i := 0; i < 16; i++ {
-			spriteBytes[i] = ppu.RAM[0x1000+uint(sprite)*16+uint(i)]
+			spriteBytes[i] = cpu.PPU.RAM[baseAddr+uint(sprite)*16+uint(i)]
 		}
 
 		for pallete := 0; pallete < 4; pallete++ {
@@ -137,7 +141,7 @@ func (ppu *PPU) CacheSPR() {
 					if p == 0 || p == 4 || p == 8 || p == 12 {
 						p -= 0x10
 					}
-					R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
+					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
 					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)), color.RGBA{R, G, B, 0})
 				}
 			}
@@ -153,7 +157,7 @@ func (ppu *PPU) CacheSPR() {
 					if p == 0 || p == 4 || p == 8 || p == 12 {
 						p -= 0x10
 					}
-					R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
+					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
 					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+32), color.RGBA{R, G, B, 0})
 				}
 			}
@@ -169,7 +173,7 @@ func (ppu *PPU) CacheSPR() {
 					if p == 0 || p == 4 || p == 8 || p == 12 {
 						p -= 0x10
 					}
-					R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
+					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
 					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+64), color.RGBA{R, G, B, 0})
 				}
 			}
@@ -185,7 +189,7 @@ func (ppu *PPU) CacheSPR() {
 					if p == 0 || p == 4 || p == 8 || p == 12 {
 						p -= 0x10
 					}
-					R, G, B := colors[ppu.RAM[0x3f10+p]][0], colors[ppu.RAM[0x3f10+p]][1], colors[ppu.RAM[0x3f10+p]][2]
+					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
 					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+96), color.RGBA{R, G, B, 0})
 				}
 			}
@@ -200,8 +204,8 @@ func (ppu *PPU) CacheSPR() {
 
 	tmp, _, _ := image.Decode(buf)
 	pic := pixel.PictureDataFromImage(tmp)
-	ppu.SPRBuf = pic
-	ppu.SPRPalleteOK = true
+	cpu.PPU.SPRBuf = pic
+	cpu.PPU.SPRPalleteOK = true
 }
 
 func (ppu *PPU) outputSpriteRect(spriteNum, attr byte) (rect pixel.Rect) {
@@ -219,4 +223,17 @@ func (ppu *PPU) outputSpriteRect(spriteNum, attr byte) (rect pixel.Rect) {
 		rect = pixel.R(float64(spriteNum*8), float64(32-pallete*8), float64((spriteNum+1)*8), float64(32-(pallete+1)*8))
 	}
 	return rect
+}
+
+func (cpu *CPU) getBaseAddr(name string) uint {
+	if name == "BG" {
+		if cpu.RAM[0x2000]&0x10 > 0 {
+			return 0x1000
+		}
+	} else if name == "SPR" {
+		if cpu.RAM[0x2000]&0x08 > 0 {
+			return 0x1000
+		}
+	}
+	return 0x0000
 }

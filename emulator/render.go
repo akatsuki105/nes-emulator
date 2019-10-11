@@ -30,10 +30,10 @@ func (cpu *CPU) Render() {
 		panic(err)
 	}
 
-	cpu.PPU.CacheBG()
+	cpu.CacheBG()
 	BGBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
 
-	cpu.PPU.CacheSPR()
+	cpu.CacheSPR()
 	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 
 	go cpu.handleJoypad(win)
@@ -126,11 +126,11 @@ func (cpu *CPU) Render() {
 		win.Update()
 
 		if !cpu.PPU.BGPalleteOK {
-			cpu.PPU.CacheBG()
+			cpu.CacheBG()
 			BGBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
 		}
 		if !cpu.PPU.SPRPalleteOK {
-			cpu.PPU.CacheSPR()
+			cpu.CacheSPR()
 			SPRBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 		}
 
