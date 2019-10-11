@@ -18,7 +18,7 @@ func (cpu *CPU) ADC(addr uint16) {
 	cpu.FlagN(value)
 	cpu.FlagV(aFlag, value, value16)
 	cpu.FlagZ(value)
-	cpu.FlagC(value16)
+	cpu.FlagC("ADC", value16)
 }
 
 // SBC Subtract M from A with C (A - M - not C -> A)
@@ -32,7 +32,7 @@ func (cpu *CPU) SBC(addr uint16) {
 	cpu.FlagN(value)
 	cpu.FlagV(aFlag, value, value16)
 	cpu.FlagZ(value)
-	cpu.FlagC(value16)
+	cpu.FlagC("SBC", value16)
 }
 
 // ============================================== 論理演算 ==============================================
@@ -89,16 +89,27 @@ func (cpu *CPU) ASL(addr uint16) {
 // LSR Logical shift right one bit
 func (cpu *CPU) LSR(addr uint16) {
 	if addr == null {
-		cpu.Reg.P = cpu.Reg.P | (cpu.Reg.A & 0x01) // Aのbit0をcにセット
+		// Aのbit0をcにセット
+		if cpu.Reg.A&0x01 > 0 {
+			cpu.Reg.P = cpu.Reg.P | 0x01
+		} else {
+			cpu.Reg.P = cpu.Reg.P & 0xfe
+		}
+
 		cpu.Reg.A = cpu.Reg.A >> 1
-		cpu.Reg.A = cpu.Reg.A | (0 << 7) // Aのbit7に0をセット
 		cpu.FlagN(cpu.Reg.A)
 		cpu.FlagZ(cpu.Reg.A)
 	} else {
 		value := cpu.FetchMemory8(addr)
-		cpu.Reg.P = cpu.Reg.P | (value & 0x01) // valueのbit0をcにセット
+
+		// valueのbit0をcにセット
+		if value&0x01 > 0 {
+			cpu.Reg.P = cpu.Reg.P | 0x01
+		} else {
+			cpu.Reg.P = cpu.Reg.P & 0xfe
+		}
+
 		value = value >> 1
-		value = value | (0 << 7) // valueのbit7に0をセット
 		cpu.SetMemory8(addr, value)
 		cpu.FlagN(value)
 		cpu.FlagZ(value)
@@ -337,7 +348,7 @@ func (cpu *CPU) CMP(addr uint16) {
 
 	cpu.FlagN(value)
 	cpu.FlagZ(value)
-	cpu.FlagC(value16)
+	cpu.FlagC("CMP", value16)
 }
 
 // CPX Compare M and X (X - M)
@@ -347,7 +358,7 @@ func (cpu *CPU) CPX(addr uint16) {
 
 	cpu.FlagN(value)
 	cpu.FlagZ(value)
-	cpu.FlagC(value16)
+	cpu.FlagC("CPX", value16)
 }
 
 // CPY Compare M and Y (Y - M)
@@ -357,7 +368,7 @@ func (cpu *CPU) CPY(addr uint16) {
 
 	cpu.FlagN(value)
 	cpu.FlagZ(value)
-	cpu.FlagC(value16)
+	cpu.FlagC("CPY", value16)
 }
 
 // =========================================== インクリメント、デクリメント ===========================================

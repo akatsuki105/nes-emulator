@@ -95,9 +95,10 @@ func (cpu *CPU) Render() {
 
 					// BG描画
 					scrollPixelX, scrollPixelY := cpu.PPU.scroll[0], cpu.PPU.scroll[1]
-					rect := cpu.PPU.outputBGRect(uint(x), uint(y), uint(scrollPixelX), uint(scrollPixelY))
+					mainScreen := cpu.RAM[0x2000] & 0x03
+					rect := cpu.PPU.outputBGRect(uint(x), uint(y), uint(scrollPixelX), uint(scrollPixelY), mainScreen)
 					BGSprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
-					matrix := pixel.IM.Moved(pixel.V(float64(uint8(x*8)-(scrollPixelX%8)+4), float64(uint8(height-y*8)-scrollPixelY%8)-4))
+					matrix := pixel.IM.Moved(pixel.V(float64(uint8(x*8)-(scrollPixelX%8)+4), float64(uint8(height-y*8)+(scrollPixelY%8)-4)))
 
 					lineMutex.Lock()
 					BGSprite.Draw(BGBatch, matrix)

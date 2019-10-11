@@ -39,10 +39,18 @@ func (cpu *CPU) FlagZ(b byte) {
 }
 
 // FlagC Cフラグを立てるか判定する
-func (cpu *CPU) FlagC(u16 uint16) {
+func (cpu *CPU) FlagC(instruction string, u16 uint16) {
 	if (u16 >> 8) != 0 {
-		cpu.Reg.P = cpu.Reg.P | 0x01 // 0b0000_0001
+		if instruction == "ADC" {
+			cpu.Reg.P = cpu.Reg.P | 0x01 // 0b0000_0001
+		} else {
+			cpu.Reg.P = cpu.Reg.P & 0xfe // 0b1111_1110
+		}
 	} else {
-		cpu.Reg.P = cpu.Reg.P & 0xfe // 0b1111_1110
+		if instruction == "ADC" {
+			cpu.Reg.P = cpu.Reg.P & 0xfe // 0b1111_1110
+		} else {
+			cpu.Reg.P = cpu.Reg.P | 0x01 // 0b0000_0001
+		}
 	}
 }
