@@ -98,10 +98,11 @@ func (cpu *CPU) exec() {
 		addr = cpu.IndexedIndirectAddressing()
 	case "ind,Y":
 		addr = cpu.IndirectIndexedAddressing()
-	case "Ind":
+	case "ind":
 		addr = cpu.AbsoluteIndirectAddressing()
 	default:
-		fmt.Printf("addressing is not found: %d=0x%x\n", opcode, opcode)
+		errorStatement := fmt.Sprintf("addressing is not found => opcode:%d(%x)\n", opcode, opcode)
+		panic(errorStatement)
 	}
 
 	switch instruction {
@@ -218,7 +219,8 @@ func (cpu *CPU) exec() {
 	case "NOP":
 		cpu.NOP(addr)
 	default:
-		fmt.Printf("instruction is not found: %d=0x%x\n", opcode, opcode)
+		errorStatement := fmt.Sprintf("instruction is not found: %d=0x%x\n", opcode, opcode)
+		panic(errorStatement)
 	}
 
 	cpu.mutex.Unlock()
