@@ -74,9 +74,9 @@ func (cpu *CPU) ASL(addr uint16) {
 
 		// Aのbit7をCフラグにセット
 		if cpu.Reg.A&0x80 > 0 {
-			cpu.Reg.P |= 0x01
+			cpu.setCFlag()
 		} else {
-			cpu.Reg.P &= 0xfe
+			cpu.clearCFlag()
 		}
 
 		cpu.Reg.A = cpu.Reg.A << 1
@@ -86,9 +86,9 @@ func (cpu *CPU) ASL(addr uint16) {
 		value := cpu.FetchMemory8(addr)
 
 		if value&0x80 > 0 {
-			cpu.Reg.P |= 0x01
+			cpu.setCFlag()
 		} else {
-			cpu.Reg.P &= 0xfe
+			cpu.clearCFlag()
 		}
 
 		value = value << 1
@@ -104,9 +104,9 @@ func (cpu *CPU) LSR(addr uint16) {
 
 		// Aのbit0をcにセット
 		if cpu.Reg.A&0x01 > 0 {
-			cpu.Reg.P = cpu.Reg.P | 0x01
+			cpu.setCFlag()
 		} else {
-			cpu.Reg.P = cpu.Reg.P & 0xfe
+			cpu.clearCFlag()
 		}
 
 		cpu.Reg.A = cpu.Reg.A >> 1
@@ -117,9 +117,9 @@ func (cpu *CPU) LSR(addr uint16) {
 
 		// valueのbit0をcにセット
 		if value&0x01 > 0 {
-			cpu.Reg.P = cpu.Reg.P | 0x01
+			cpu.setCFlag()
 		} else {
-			cpu.Reg.P = cpu.Reg.P & 0xfe
+			cpu.clearCFlag()
 		}
 
 		value = value >> 1
@@ -136,9 +136,9 @@ func (cpu *CPU) ROL(addr uint16) {
 
 		// Aのbit7をCフラグにセット
 		if cpu.Reg.A&0x80 > 0 {
-			cpu.Reg.P |= 0x01
+			cpu.setCFlag()
 		} else {
-			cpu.Reg.P &= 0xfe
+			cpu.clearCFlag()
 		}
 
 		cpu.Reg.A = cpu.Reg.A << 1
@@ -151,9 +151,9 @@ func (cpu *CPU) ROL(addr uint16) {
 
 		// valueのbit7をCフラグにセット
 		if value&0x80 > 0 {
-			cpu.Reg.P |= 0x01
+			cpu.setCFlag()
 		} else {
-			cpu.Reg.P &= 0xfe
+			cpu.clearCFlag()
 		}
 
 		value = value << 1
@@ -171,9 +171,9 @@ func (cpu *CPU) ROR(addr uint16) {
 
 		// Aのbit0をcにセット
 		if cpu.Reg.A&0x01 > 0 {
-			cpu.Reg.P = cpu.Reg.P | 0x01
+			cpu.setCFlag()
 		} else {
-			cpu.Reg.P = cpu.Reg.P & 0xfe
+			cpu.clearCFlag()
 		}
 
 		cpu.Reg.A = cpu.Reg.A >> 1
@@ -186,9 +186,9 @@ func (cpu *CPU) ROR(addr uint16) {
 
 		// valueのbit0をcにセット
 		if value&0x01 > 0 {
-			cpu.Reg.P = cpu.Reg.P | 0x01
+			cpu.setCFlag()
 		} else {
-			cpu.Reg.P = cpu.Reg.P & 0xfe
+			cpu.clearCFlag()
 		}
 
 		value = value >> 1

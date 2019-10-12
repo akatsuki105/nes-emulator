@@ -42,15 +42,23 @@ func (cpu *CPU) FlagZ(b byte) {
 func (cpu *CPU) FlagC(instruction string, u16 uint16) {
 	if (u16 >> 8) != 0 {
 		if instruction == "ADC" {
-			cpu.Reg.P = cpu.Reg.P | 0x01 // 0b0000_0001
+			cpu.setCFlag()
 		} else {
-			cpu.Reg.P = cpu.Reg.P & 0xfe // 0b1111_1110
+			cpu.clearCFlag()
 		}
 	} else {
 		if instruction == "ADC" {
-			cpu.Reg.P = cpu.Reg.P & 0xfe // 0b1111_1110
+			cpu.clearCFlag()
 		} else {
-			cpu.Reg.P = cpu.Reg.P | 0x01 // 0b0000_0001
+			cpu.setCFlag()
 		}
 	}
+}
+
+func (cpu *CPU) setCFlag() {
+	cpu.Reg.P = cpu.Reg.P | 0x01 // 0b0000_0001
+}
+
+func (cpu *CPU) clearCFlag() {
+	cpu.Reg.P = cpu.Reg.P & 0xfe // 0b1111_1110
 }
