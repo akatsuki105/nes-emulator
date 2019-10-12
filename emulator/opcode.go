@@ -1,6 +1,7 @@
 package emulator
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -478,6 +479,7 @@ func (cpu *CPU) LDA(addr uint16) {
 	case 0x2002:
 		cpu.Reg.A = cpu.FetchMemory8(addr)
 		cpu.PPU.scrollFlag = false
+		cpu.PPU.ptr = 0x0000
 		cpu.clearVBlank()
 	case 0x2007:
 		cpu.Reg.A = cpu.PPU.RAM[cpu.PPU.ptr]
@@ -500,6 +502,7 @@ func (cpu *CPU) LDX(addr uint16) {
 	case 0x2002:
 		cpu.Reg.X = cpu.FetchMemory8(addr)
 		cpu.PPU.scrollFlag = false
+		cpu.PPU.ptr = 0x0000
 		cpu.clearVBlank()
 	case 0x2007:
 		cpu.Reg.X = cpu.PPU.RAM[cpu.PPU.ptr]
@@ -521,6 +524,7 @@ func (cpu *CPU) LDY(addr uint16) {
 	case 0x2002:
 		cpu.Reg.Y = cpu.FetchMemory8(addr)
 		cpu.PPU.scrollFlag = false
+		cpu.PPU.ptr = 0x0000
 		cpu.clearVBlank()
 	case 0x2007:
 		cpu.Reg.Y = cpu.PPU.RAM[cpu.PPU.ptr]
@@ -651,6 +655,12 @@ func (cpu *CPU) STY(addr uint16) {
 
 // setVRAM VRAM(0x2007)に書き込む処理を共通化したもの
 func (cpu *CPU) setVRAM(value byte) {
+	if cpu.PPU.ptr > 0x4000 {
+		cpu.writeHistory()
+		panicMsg := fmt.Sprintf("Accessed outside the range of VRAM:0x%x", cpu.PPU.ptr)
+		panic(panicMsg)
+	}
+
 	cpu.PPU.RAM[cpu.PPU.ptr] = value
 	if cpu.PPU.ptr == 0x3f0f {
 		cpu.PPU.BGPalleteOK = false

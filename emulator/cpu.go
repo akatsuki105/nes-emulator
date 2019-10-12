@@ -8,6 +8,7 @@ import (
 var (
 	prgRomPageSize int = 16 * 1024 // プログラムROMのページサイズ
 	chrRomPageSize int = 8 * 1024  // キャラクタROMのページサイズ
+	maxHistory         = 64
 )
 
 // CPURegister CPUのレジスタです。
@@ -27,12 +28,14 @@ type CPU struct {
 	PPU     PPU
 	joypad1 Joypad
 	mutex   sync.Mutex
+	history []string
 }
 
 // InitReg レジスタの初期化
 func (cpu *CPU) InitReg() {
-	cpu.Reg.S = 0xff // スタックは0x1ffから上に伸びる
+	cpu.Reg.S = 0xfd
 	cpu.Reg.PC = 0x8000
+	cpu.Reg.P = 0x34
 }
 
 // LoadROM ROMのバイトデータからプログラムROMとページROMを取り出してRAMにロードする
@@ -101,8 +104,10 @@ func (cpu *CPU) exec() {
 	case "ind":
 		addr = cpu.AbsoluteIndirectAddressing()
 	default:
-		errorStatement := fmt.Sprintf("addressing is not found => opcode:%d(%x)\n", opcode, opcode)
-		panic(errorStatement)
+		cpu.writeHistory()
+
+		panicMsg := fmt.Sprintf("addressing is not found => opcode:%d(%x)\n", opcode, opcode)
+		panic(panicMsg)
 	}
 
 	switch instruction {
@@ -219,9 +224,13 @@ func (cpu *CPU) exec() {
 	case "NOP":
 		cpu.NOP(addr)
 	default:
-		errorStatement := fmt.Sprintf("instruction is not found: %d=0x%x\n", opcode, opcode)
-		panic(errorStatement)
+		cpu.writeHistory()
+
+		panicMsg := fmt.Sprintf("instruction is not found: %d=0x%x\n", opcode, opcode)
+		panic(panicMsg)
 	}
+
+	cpu.pushHistory(instruction, addressing, addr)
 
 	cpu.mutex.Unlock()
 }
@@ -239,4 +248,21 @@ func (cpu *CPU) getVRAMDelta() (delta uint16) {
 		return 32
 	}
 	return 1
+}
+
+// pushHistory CPUのログを追加する
+func (cpu *CPU) pushHistory(instruction, addressing string, addr uint16) {
+	log := fmt.Sprintf("%s:%s 0x%x", instruction, addressing, addr)
+	cpu.history = append(cpu.history, log)
+
+	if len(cpu.history) > maxHistory {
+		cpu.history = cpu.history[1:]
+	}
+}
+
+// writeHistory CPUのログを書き出す
+func (cpu *CPU) writeHistory() {
+	for i, log := range cpu.history {
+		fmt.Printf("%d: %s\n", i, log)
+	}
 }
