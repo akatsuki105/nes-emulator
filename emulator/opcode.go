@@ -71,16 +71,27 @@ func (cpu *CPU) EOR(addr uint16) {
 func (cpu *CPU) ASL(addr uint16) {
 	if addr == null {
 		// ASLAccumulator
-		cpu.Reg.P = cpu.Reg.P | ((cpu.Reg.A & 0x80) >> 7) // Aのbit7をcにセット
+
+		// Aのbit7をCフラグにセット
+		if cpu.Reg.A&0x80 > 0 {
+			cpu.Reg.P |= 0x01
+		} else {
+			cpu.Reg.P &= 0xfe
+		}
+
 		cpu.Reg.A = cpu.Reg.A << 1
-		cpu.Reg.A = cpu.Reg.A | 0 // Aのbit0に0をセット
 		cpu.FlagN(cpu.Reg.A)
 		cpu.FlagZ(cpu.Reg.A)
 	} else {
 		value := cpu.FetchMemory8(addr)
-		cpu.Reg.P = cpu.Reg.P | ((value & 0x80) >> 7) // valueのbit7をcにセット
+
+		if value&0x80 > 0 {
+			cpu.Reg.P |= 0x01
+		} else {
+			cpu.Reg.P &= 0xfe
+		}
+
 		value = value << 1
-		value = value | 0 // valueのbit0に0をセット
 		cpu.SetMemory8(addr, value)
 		cpu.FlagN(value)
 		cpu.FlagZ(value)
@@ -90,6 +101,7 @@ func (cpu *CPU) ASL(addr uint16) {
 // LSR Logical shift right one bit
 func (cpu *CPU) LSR(addr uint16) {
 	if addr == null {
+
 		// Aのbit0をcにセット
 		if cpu.Reg.A&0x01 > 0 {
 			cpu.Reg.P = cpu.Reg.P | 0x01
@@ -121,7 +133,14 @@ func (cpu *CPU) LSR(addr uint16) {
 func (cpu *CPU) ROL(addr uint16) {
 	if addr == null {
 		cFlag := cpu.Reg.P & 0x01
-		cpu.Reg.P = cpu.Reg.P | ((cpu.Reg.A & 0x80) >> 7) // Aのbit7をcにセット
+
+		// Aのbit7をCフラグにセット
+		if cpu.Reg.A&0x80 > 0 {
+			cpu.Reg.P |= 0x01
+		} else {
+			cpu.Reg.P &= 0xfe
+		}
+
 		cpu.Reg.A = cpu.Reg.A << 1
 		cpu.Reg.A = cpu.Reg.A | cFlag // Aのbit0にcをセット
 		cpu.FlagN(cpu.Reg.A)
@@ -129,7 +148,14 @@ func (cpu *CPU) ROL(addr uint16) {
 	} else {
 		value := cpu.FetchMemory8(addr)
 		cFlag := cpu.Reg.P & 0x01
-		cpu.Reg.P = cpu.Reg.P | ((value & 0x80) >> 7) // valueのbit7をcにセット
+
+		// valueのbit7をCフラグにセット
+		if value&0x80 > 0 {
+			cpu.Reg.P |= 0x01
+		} else {
+			cpu.Reg.P &= 0xfe
+		}
+
 		value = value << 1
 		value = value | cFlag // valueのbit0にcをセット
 		cpu.SetMemory8(addr, value)
@@ -142,7 +168,14 @@ func (cpu *CPU) ROL(addr uint16) {
 func (cpu *CPU) ROR(addr uint16) {
 	if addr == null {
 		cFlag := cpu.Reg.P & 0x01
-		cpu.Reg.P = cpu.Reg.P | (cpu.Reg.A & 0x01) // valueのbit0をcにセット
+
+		// Aのbit0をcにセット
+		if cpu.Reg.A&0x01 > 0 {
+			cpu.Reg.P = cpu.Reg.P | 0x01
+		} else {
+			cpu.Reg.P = cpu.Reg.P & 0xfe
+		}
+
 		cpu.Reg.A = cpu.Reg.A >> 1
 		cpu.Reg.A = cpu.Reg.A | (cFlag << 7) // valueのbit7にcをセット
 		cpu.FlagN(cpu.Reg.A)
@@ -150,7 +183,14 @@ func (cpu *CPU) ROR(addr uint16) {
 	} else {
 		value := cpu.FetchMemory8(addr)
 		cFlag := cpu.Reg.P & 0x01
-		cpu.Reg.P = cpu.Reg.P | (value & 0x01) // valueのbit0をcにセット
+
+		// valueのbit0をcにセット
+		if value&0x01 > 0 {
+			cpu.Reg.P = cpu.Reg.P | 0x01
+		} else {
+			cpu.Reg.P = cpu.Reg.P & 0xfe
+		}
+
 		value = value >> 1
 		value = value | (cFlag << 7) // valueのbit7にcをセット
 		cpu.SetMemory8(addr, value)
