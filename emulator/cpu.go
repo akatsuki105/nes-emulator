@@ -295,3 +295,26 @@ func (cpu *CPU) Debug() {
 	cpu.writeHistory()
 	os.Exit(1)
 }
+
+// spriteZeroHit
+func (cpu *CPU) spriteZeroHit(x uint16) {
+	if cpu.RAM[0x2001]&0x10 == 0 {
+		return
+	}
+	if cpu.RAM[0x2001]&0x08 == 0 {
+		return
+	}
+
+	if x <= 7 && (cpu.RAM[0x2001]&0x04 == 0) {
+		return
+	}
+	if x <= 7 && (cpu.RAM[0x2001]&0x02 == 0) {
+		return
+	}
+
+	if x == 255 {
+		return
+	}
+
+	cpu.RAM[0x2002] |= 0x40
+}

@@ -16,8 +16,8 @@ type Joypad struct {
 var keyList = [8]pixelgl.Button{
 	pixelgl.KeyX,
 	pixelgl.KeyZ,
-	pixelgl.KeyEnter,
 	pixelgl.KeyRightShift,
+	pixelgl.KeyEnter,
 	pixelgl.KeyUp,
 	pixelgl.KeyDown,
 	pixelgl.KeyLeft,

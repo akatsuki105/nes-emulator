@@ -40,21 +40,19 @@ func (cpu *CPU) Render() {
 
 	for !win.Closed() {
 		// SPR探索
-		var pixel2sprite map[uint16]([2]byte)
-		pixel2sprite = map[uint16]([2]byte){}
+		var pixel2sprite map[uint16]([3]byte)
+		pixel2sprite = map[uint16]([3]byte){}
 		for i := 0; i < 64; i++ {
 			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])
 			spriteNum := cpu.PPU.sRAM[i*4+1]
 			attr := cpu.PPU.sRAM[i*4+2]
-			pixel2sprite[(uint16(pixelY)<<8)|uint16(pixelX)] = [2]byte{spriteNum, attr}
+			pixel2sprite[(uint16(pixelY)<<8)|uint16(pixelX)] = [3]byte{spriteNum, attr, byte(i)}
 		}
 
 		// BG・SPR描画
 		BGBatch.Clear()
 		SPRBatch.Clear()
 		for y := 0; y < height/8; y++ {
-			cpu.RAM[0x2002] &= 0xbf
-
 			go func() {
 				for i := 0; i < 8; i++ {
 					for j := 0; j < int(math.Ceil(341/overload)); j++ {
@@ -75,10 +73,11 @@ func (cpu *CPU) Render() {
 							indexX, indexY := i%8, i/8
 							sprite, ok := pixel2sprite[(uint16(y*8+indexY)<<8)|uint16(x*8+indexX)]
 							if ok {
-								spriteNum, attr := sprite[0], sprite[1]
-								if spriteNum == 0 {
-									cpu.RAM[0x2002] |= 0x40
+								spriteNum, attr, index := sprite[0], sprite[1], sprite[2]
+								if index == 0 {
+									cpu.spriteZeroHit(uint16(y*8 + indexY))
 								}
+
 								if attr&0x20 == 0 {
 									rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
 									SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
@@ -119,6 +118,8 @@ func (cpu *CPU) Render() {
 				cpu.exec()
 			}
 		}
+
+		cpu.RAM[0x2002] &= 0xbf
 
 		BGBatch.Draw(win)
 		SPRBatch.Draw(win)
