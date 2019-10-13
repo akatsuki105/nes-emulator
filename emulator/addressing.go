@@ -39,7 +39,7 @@ func (cpu *CPU) AbsoluteIndirectAddressing() (addr uint16) {
 	return addr
 }
 
-// AbsoluteXAddressing AbsoluteXのアドレスを返す
+// AbsoluteXAddressing AbsoluteXのアドレスを返す(absX)
 func (cpu *CPU) AbsoluteXAddressing() (addr uint16) {
 	lower := uint16(cpu.FetchCode8(1))
 	upper := uint16(cpu.FetchCode8(2))
@@ -91,7 +91,7 @@ func (cpu *CPU) ZeroPageYAddressing() (addr uint16) {
 	return addr
 }
 
-// IndexedIndirectAddressing IndexedIndirectのアドレスを返す
+// IndexedIndirectAddressing IndexedIndirectのアドレスを返す(X, ind)
 func (cpu *CPU) IndexedIndirectAddressing() (addr uint16) {
 	lower0 := uint16(cpu.FetchCode8(1)) + uint16(cpu.Reg.X)
 	upper0 := uint16(0x00)
@@ -105,7 +105,7 @@ func (cpu *CPU) IndexedIndirectAddressing() (addr uint16) {
 	return addr
 }
 
-// IndirectIndexedAddressing IndirectIndexedのアドレスを返す
+// IndirectIndexedAddressing IndirectIndexedのアドレスを返す(ind, Y)
 func (cpu *CPU) IndirectIndexedAddressing() (addr uint16) {
 	upper0 := uint16(0x00)
 	lower0 := uint16(cpu.FetchCode8(1))

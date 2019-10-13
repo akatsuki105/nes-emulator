@@ -521,8 +521,13 @@ func (cpu *CPU) LDA(addr uint16) {
 		cpu.PPU.scrollFlag = false
 		cpu.PPU.ptr = 0x0000
 		cpu.clearVBlank()
-	case 0x2007:
-		cpu.Reg.A = cpu.PPU.RAM[cpu.PPU.ptr]
+	case ppudata:
+		if cpu.PPU.ptr <= 0x3eff {
+			cpu.Reg.A = cpu.PPU.ppudataBuf
+			cpu.PPU.ppudataBuf = cpu.PPU.RAM[cpu.PPU.ptr]
+		} else {
+			cpu.Reg.A = cpu.PPU.RAM[cpu.PPU.ptr]
+		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
 		time.Sleep(time.Nanosecond)
@@ -544,8 +549,13 @@ func (cpu *CPU) LDX(addr uint16) {
 		cpu.PPU.scrollFlag = false
 		cpu.PPU.ptr = 0x0000
 		cpu.clearVBlank()
-	case 0x2007:
-		cpu.Reg.X = cpu.PPU.RAM[cpu.PPU.ptr]
+	case ppudata:
+		if cpu.PPU.ptr <= 0x3eff {
+			cpu.Reg.X = cpu.PPU.ppudataBuf
+			cpu.PPU.ppudataBuf = cpu.PPU.RAM[cpu.PPU.ptr]
+		} else {
+			cpu.Reg.X = cpu.PPU.RAM[cpu.PPU.ptr]
+		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
 		cpu.Reg.X = cpu.joypad1.cmd[cpu.joypad1.ctr]
@@ -566,8 +576,13 @@ func (cpu *CPU) LDY(addr uint16) {
 		cpu.PPU.scrollFlag = false
 		cpu.PPU.ptr = 0x0000
 		cpu.clearVBlank()
-	case 0x2007:
-		cpu.Reg.Y = cpu.PPU.RAM[cpu.PPU.ptr]
+	case ppudata:
+		if cpu.PPU.ptr <= 0x3eff {
+			cpu.Reg.Y = cpu.PPU.ppudataBuf
+			cpu.PPU.ppudataBuf = cpu.PPU.RAM[cpu.PPU.ptr]
+		} else {
+			cpu.Reg.Y = cpu.PPU.RAM[cpu.PPU.ptr]
+		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
 		cpu.Reg.Y = cpu.joypad1.cmd[cpu.joypad1.ctr]
@@ -595,9 +610,9 @@ func (cpu *CPU) STA(addr uint16) {
 			cpu.PPU.scroll[0] = cpu.Reg.A
 			cpu.PPU.scrollFlag = true
 		}
-	case 0x2006:
+	case ppuaddr:
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.A))
-	case 0x2007:
+	case ppudata:
 		cpu.setVRAM(cpu.Reg.A)
 	case spriteDMA:
 		start := uint16(cpu.Reg.A) << 8
@@ -632,9 +647,9 @@ func (cpu *CPU) STX(addr uint16) {
 			cpu.PPU.scroll[0] = cpu.Reg.X
 			cpu.PPU.scrollFlag = true
 		}
-	case 0x2006:
+	case ppuaddr:
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.X))
-	case 0x2007:
+	case ppudata:
 		cpu.setVRAM(cpu.Reg.X)
 	case spriteDMA:
 		start := uint16(cpu.Reg.X) << 8
@@ -669,9 +684,9 @@ func (cpu *CPU) STY(addr uint16) {
 			cpu.PPU.scroll[0] = cpu.Reg.Y
 			cpu.PPU.scrollFlag = true
 		}
-	case 0x2006:
+	case ppuaddr:
 		cpu.PPU.ptr = (cpu.PPU.ptr<<8 | uint16(cpu.Reg.Y))
-	case 0x2007:
+	case ppudata:
 		cpu.setVRAM(cpu.Reg.Y)
 	case spriteDMA:
 		start := uint16(cpu.Reg.Y) << 8
@@ -693,7 +708,7 @@ func (cpu *CPU) STY(addr uint16) {
 	cpu.SetMemory8(addr, cpu.Reg.Y)
 }
 
-// setVRAM VRAM(0x2007)に書き込む処理を共通化したもの
+// setVRAM VRAM(ppudata)に書き込む処理を共通化したもの
 func (cpu *CPU) setVRAM(value byte) {
 	if cpu.PPU.ptr > 0x4000 {
 		cpu.writeHistory()

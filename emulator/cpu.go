@@ -34,12 +34,19 @@ type CPU struct {
 // InitReg レジスタの初期化
 func (cpu *CPU) InitReg() {
 	cpu.Reg.S = 0xfd
-	cpu.Reg.PC = 0x8000
 	cpu.Reg.P = 0x34
+
+	lower := uint16(cpu.FetchMemory8(0xfffc))
+	upper := uint16(cpu.FetchMemory8(0xfffd))
+	cpu.Reg.PC = (upper << 8) | lower
 }
 
 // LoadROM ROMのバイトデータからプログラムROMとページROMを取り出してRAMにロードする
 func (cpu *CPU) LoadROM(rom []byte) {
+	// for i := 0; i < 16; i++ {
+	// 	fmt.Printf("iNES[%d]: 0x%x\n", i, rom[i])
+	// }
+
 	// ミラーをセットする
 	mirrorFlag := rom[6]
 	cpu.PPU.mirror = mirrorFlag > 0
@@ -57,8 +64,8 @@ func (cpu *CPU) LoadROM(rom []byte) {
 	for i := 0; i < len(prgBytes); i++ {
 		cpu.RAM[0x8000+i] = prgBytes[i]
 
-		// ページサイズが1のときは割り込みハンドラが0xbffa~に配置されるので0xfffa~にミラーする
-		if prgPage == 1 && 0x8000+i >= 0xbffa {
+		// ページサイズが1のときは0x8000-0xbfffを0xc000-0xffffにミラーする
+		if prgPage == 1 {
 			cpu.RAM[0x8000+i+0x4000] = prgBytes[i]
 		}
 	}
@@ -67,11 +74,18 @@ func (cpu *CPU) LoadROM(rom []byte) {
 	for i := 0; i < len(chrBytes); i++ {
 		cpu.PPU.RAM[i] = chrBytes[i]
 	}
+
+	// 割り込みベクタデバッグ
+	// for i := 0x0a; i <= 0x0f; i++ {
+	// 	addr := 0xfff0 + i
+	// 	fmt.Printf("IRQVector[0x%x]: %x\n", addr, cpu.RAM[addr])
+	// }
 }
 
 // Cycle CPUのメインサイクル
 func (cpu *CPU) exec() {
 	cpu.mutex.Lock()
+	prevPC := cpu.Reg.PC
 	opcode := cpu.FetchCode8(0)
 	instruction, addressing := instructions[opcode][0], instructions[opcode][1]
 
@@ -106,9 +120,11 @@ func (cpu *CPU) exec() {
 	default:
 		cpu.writeHistory()
 
-		panicMsg := fmt.Sprintf("addressing is not found => opcode:%d(%x)\n", opcode, opcode)
+		panicMsg := fmt.Sprintf("addressing is not found => { eip: %x, opcode: %x }\n", cpu.Reg.PC, opcode)
 		panic(panicMsg)
 	}
+
+	// fmt.Printf("eip: 0x%x %s:%s:%x\n", prevPC, instruction, addressing, addr)
 
 	switch instruction {
 	case "ADC":
@@ -230,7 +246,7 @@ func (cpu *CPU) exec() {
 		panic(panicMsg)
 	}
 
-	cpu.pushHistory(instruction, addressing, addr)
+	cpu.pushHistory(prevPC, opcode, instruction, addressing, addr)
 
 	cpu.mutex.Unlock()
 }
@@ -251,8 +267,8 @@ func (cpu *CPU) getVRAMDelta() (delta uint16) {
 }
 
 // pushHistory CPUのログを追加する
-func (cpu *CPU) pushHistory(instruction, addressing string, addr uint16) {
-	log := fmt.Sprintf("%s:%s 0x%x", instruction, addressing, addr)
+func (cpu *CPU) pushHistory(eip uint16, opcode byte, instruction, addressing string, addr uint16) {
+	log := fmt.Sprintf("eip:0x%x   opcode:%x   %s:%s 0x%x", eip, opcode, instruction, addressing, addr)
 	cpu.history = append(cpu.history, log)
 
 	if len(cpu.history) > maxHistory {

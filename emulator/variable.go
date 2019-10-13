@@ -3,6 +3,8 @@ package emulator
 const (
 	// 何もないことを表す
 	null      uint16 = 0x2008
+	ppuaddr   uint16 = 0x2006
+	ppudata   uint16 = 0x2007
 	spriteDMA uint16 = 0x4014
 	joypad1   uint16 = 0x4016
 	joypad2   uint16 = 0x4017

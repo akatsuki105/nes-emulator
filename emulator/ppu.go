@@ -16,6 +16,7 @@ type PPU struct {
 	sRAM         [0x100]byte // Sprite RAM
 	mirror       bool        // 0: 水平ミラー, 1:垂直ミラー
 	ptr          uint16      // PPURAMのポインタ 0x2006に書き込まれたとき更新される
+	ppudataBuf   byte        // PPUDATAからreadしたときのbuffer
 	scroll       [2]uint8    // (水平スクロールpixel, 垂直スクロールpixel)
 	scrollFlag   bool        // trueなら2回目として書き込みする
 	BGBuf        *pixel.PictureData

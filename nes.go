@@ -13,8 +13,8 @@ func main() {
 	bytes := readFile(flag.Arg(0))
 
 	cpu := &emulator.CPU{}
-	cpu.InitReg()
 	cpu.LoadROM(bytes)
+	cpu.InitReg()
 
 	pixelgl.Run(cpu.Render)
 }
