@@ -2,6 +2,8 @@ package emulator
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 	"sync"
 )
 
@@ -281,4 +283,15 @@ func (cpu *CPU) writeHistory() {
 	for i, log := range cpu.history {
 		fmt.Printf("%d: %s\n", i, log)
 	}
+}
+
+// Debug Ctrl + C handler
+func (cpu *CPU) Debug() {
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+
+	<-quit
+	println("\n ============== Debug mode ==============\n")
+	cpu.writeHistory()
+	os.Exit(1)
 }

@@ -15,6 +15,7 @@ func main() {
 	cpu := &emulator.CPU{}
 	cpu.LoadROM(bytes)
 	cpu.InitReg()
+	go cpu.Debug()
 
 	pixelgl.Run(cpu.Render)
 }
