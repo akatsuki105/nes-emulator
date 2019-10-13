@@ -32,7 +32,7 @@ func (cpu *CPU) handleJoypad(win *pixelgl.Window) {
 		for i, key := range keyList {
 			go func(i int, key pixelgl.Button) {
 				if win.Pressed(key) {
-					cpu.joypad1.cmd[i] = 1 // 右
+					cpu.joypad1.cmd[i] = 1
 				}
 				wait.Done()
 			}(i, key)

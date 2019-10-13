@@ -142,7 +142,14 @@ func (cpu *CPU) ROL(addr uint16) {
 		}
 
 		cpu.Reg.A = cpu.Reg.A << 1
-		cpu.Reg.A = cpu.Reg.A | cFlag // Aのbit0にcをセット
+
+		// Aのbit0にcをセット
+		if cFlag > 0 {
+			cpu.Reg.A |= 0x01
+		} else {
+			cpu.Reg.A &= 0xfe
+		}
+
 		cpu.FlagN(cpu.Reg.A)
 		cpu.FlagZ(cpu.Reg.A)
 	} else {
@@ -157,7 +164,13 @@ func (cpu *CPU) ROL(addr uint16) {
 		}
 
 		value = value << 1
-		value = value | cFlag // valueのbit0にcをセット
+
+		if cFlag > 0 {
+			value |= 0x01
+		} else {
+			value &= 0xfe
+		}
+
 		cpu.SetMemory8(addr, value)
 		cpu.FlagN(value)
 		cpu.FlagZ(value)
@@ -177,7 +190,14 @@ func (cpu *CPU) ROR(addr uint16) {
 		}
 
 		cpu.Reg.A = cpu.Reg.A >> 1
-		cpu.Reg.A = cpu.Reg.A | (cFlag << 7) // valueのbit7にcをセット
+
+		// valueのbit7にcをセット
+		if cFlag > 0 {
+			cpu.Reg.A |= 0x80
+		} else {
+			cpu.Reg.A &= 0x7f
+		}
+
 		cpu.FlagN(cpu.Reg.A)
 		cpu.FlagZ(cpu.Reg.A)
 	} else {
@@ -192,7 +212,14 @@ func (cpu *CPU) ROR(addr uint16) {
 		}
 
 		value = value >> 1
-		value = value | (cFlag << 7) // valueのbit7にcをセット
+
+		// valueのbit7にcをセット
+		if cFlag > 0 {
+			value |= 0x80
+		} else {
+			value &= 0x7f
+		}
+
 		cpu.SetMemory8(addr, value)
 		cpu.FlagN(value)
 		cpu.FlagZ(value)
@@ -558,6 +585,7 @@ func (cpu *CPU) LDX(addr uint16) {
 		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
+		time.Sleep(time.Nanosecond)
 		cpu.Reg.X = cpu.joypad1.cmd[cpu.joypad1.ctr]
 		cpu.joypad1.ctr++
 	default:
@@ -585,6 +613,7 @@ func (cpu *CPU) LDY(addr uint16) {
 		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
+		time.Sleep(time.Nanosecond)
 		cpu.Reg.Y = cpu.joypad1.cmd[cpu.joypad1.ctr]
 		cpu.joypad1.ctr++
 	default:
