@@ -11,7 +11,7 @@ import (
 const (
 	width    = 256
 	height   = 240
-	overload = 14
+	overload = 8.3
 )
 
 var (
@@ -53,6 +53,13 @@ func (cpu *CPU) Render() {
 		BGBatch.Clear()
 		SPRBatch.Clear()
 		for y := 0; y < height/8; y++ {
+
+			// ラスタースクロール
+			if cpu.PPU.raster > 0 {
+				cpu.spriteZeroHit(cpu.PPU.raster)
+			}
+			cpu.PPU.raster = 0
+
 			go func() {
 				for i := 0; i < 8; i++ {
 					for j := 0; j < int(math.Ceil(341/overload)); j++ {
@@ -75,7 +82,7 @@ func (cpu *CPU) Render() {
 							if ok {
 								spriteNum, attr, index := sprite[0], sprite[1], sprite[2]
 								if index == 0 {
-									cpu.spriteZeroHit(uint16(y*8 + indexY))
+									cpu.PPU.raster = uint16(y*8 + indexY)
 								}
 
 								if attr&0x20 == 0 {
