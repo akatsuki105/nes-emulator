@@ -100,7 +100,7 @@ func (cpu *CPU) Render() {
 								}
 
 								if attr&0x20 == 0 {
-									rect := cpu.PPU.outputSpriteRect(spriteNum, attr)
+									rect := cpu.PPU.outputSpriteRect(uint(spriteNum), attr)
 									SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
 									matrix := pixel.IM.Moved(pixel.V(float64(x*8+indexX+4), float64(height-y*8-indexY-4)))
 									lineMutex.Lock()

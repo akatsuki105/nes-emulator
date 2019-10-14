@@ -210,7 +210,7 @@ func (cpu *CPU) CacheSPR() {
 	cpu.PPU.SPRPalleteOK = true
 }
 
-func (ppu *PPU) outputSpriteRect(spriteNum, attr byte) (rect pixel.Rect) {
+func (ppu *PPU) outputSpriteRect(spriteNum uint, attr byte) (rect pixel.Rect) {
 	pallete := attr & 0x03 // パレット番号
 	lrTurn := attr & 0x40  // 左右反転
 	udTurn := attr & 0x80  // 上下反転
