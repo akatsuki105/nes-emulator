@@ -43,7 +43,7 @@ func (cpu *CPU) Render() {
 		var pixel2sprite map[uint16]([3]byte)
 		pixel2sprite = map[uint16]([3]byte){}
 		for i := 0; i < 64; i++ {
-			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])
+			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])+1
 			spriteNum := cpu.PPU.sRAM[i*4+1]
 			attr := cpu.PPU.sRAM[i*4+2]
 			pixel2sprite[(uint16(pixelY)<<8)|uint16(pixelX)] = [3]byte{spriteNum, attr, byte(i)}

@@ -318,3 +318,11 @@ func (cpu *CPU) spriteZeroHit(x uint16) {
 
 	cpu.RAM[0x2002] |= 0x40
 }
+
+// getSpriteSize
+func (cpu *CPU) getSpriteSize() [2]byte {
+	if cpu.RAM[0x2000]&0x20 > 0 {
+		return [2]byte{8, 16}
+	}
+	return [2]byte{8, 8}
+}
