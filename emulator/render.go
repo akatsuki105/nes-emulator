@@ -140,7 +140,8 @@ func (cpu *CPU) Render() {
 			}
 		}
 
-		cpu.RAM[0x2002] &= 0xbf
+		cpu.RAM[0x2002] &= 0xbf // clear Raster
+		cpu.clearVBlank()
 
 		BGBatch.Draw(win)
 		SPRBatch.Draw(win)
