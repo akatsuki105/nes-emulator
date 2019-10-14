@@ -55,10 +55,10 @@ func (cpu *CPU) Render() {
 		for y := 0; y < height/8; y++ {
 
 			// ラスタースクロール
-			if cpu.PPU.raster > 0 {
+			if cpu.PPU.raster != 0 {
 				cpu.spriteZeroHit(cpu.PPU.raster)
+				cpu.PPU.raster = 0
 			}
-			cpu.PPU.raster = 0
 
 			go func() {
 				for i := 0; i < 8; i++ {
@@ -81,8 +81,15 @@ func (cpu *CPU) Render() {
 							sprite, ok := pixel2sprite[(uint16(y*8+indexY)<<8)|uint16(x*8+indexX)]
 							if ok {
 								spriteNum, attr, index := sprite[0], sprite[1], sprite[2]
+
+								// ラスタースクロールのフラグを立てる
 								if index == 0 {
-									cpu.PPU.raster = uint16(y*8 + indexY)
+									if x == 0 {
+										cpu.spriteZeroHit(cpu.PPU.raster)
+										cpu.PPU.raster = 0
+									} else {
+										cpu.PPU.raster = uint16(y*8 + indexY)
+									}
 								}
 
 								if attr&0x20 == 0 {
