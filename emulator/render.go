@@ -1,8 +1,10 @@
 package emulator
 
 import (
+	"fmt"
 	"math"
 	"sync"
+	"time"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
@@ -37,6 +39,11 @@ func (cpu *CPU) Render() {
 	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 
 	go cpu.handleJoypad(win)
+
+	var (
+		frames = 0
+		second = time.Tick(time.Second)
+	)
 
 	for !win.Closed() {
 		// SPR探索
@@ -85,7 +92,7 @@ func (cpu *CPU) Render() {
 								// ラスタースクロールのフラグを立てる
 								if index == 0 {
 									if x == 0 {
-										cpu.spriteZeroHit(cpu.PPU.raster)
+										cpu.spriteZeroHit(uint16(y*8 + indexY))
 										cpu.PPU.raster = 0
 									} else {
 										cpu.PPU.raster = uint16(y*8 + indexY)
@@ -149,5 +156,12 @@ func (cpu *CPU) Render() {
 			SPRBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 		}
 
+		frames++
+		select {
+		case <-second:
+			fmt.Printf("%s | FPS: %d\n", cfg.Title, frames)
+			frames = 0
+		default:
+		}
 	}
 }
