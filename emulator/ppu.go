@@ -47,7 +47,7 @@ func (cpu *CPU) CacheBG() {
 
 					p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
 					if p%4 == 0 {
-						p = 0
+						p = 0x10
 					}
 
 					R, G, B := colors[cpu.PPU.RAM[0x3f00+p]][0], colors[cpu.PPU.RAM[0x3f00+p]][1], colors[cpu.PPU.RAM[0x3f00+p]][2]
@@ -216,12 +216,16 @@ func (ppu *PPU) outputSpriteRect(spriteNum, attr byte) (rect pixel.Rect) {
 	udTurn := attr & 0x80  // 上下反転
 
 	if lrTurn == 0 && udTurn == 0 {
+		// そのまま
 		rect = pixel.R(float64(spriteNum*8), float64(128-pallete*8), float64((spriteNum+1)*8), float64(128-(pallete+1)*8))
-	} else if lrTurn == 0 && udTurn > 0 {
+	} else if lrTurn == 0 && udTurn != 0 {
+		// 上下反転
 		rect = pixel.R(float64(spriteNum*8), float64(96-pallete*8), float64((spriteNum+1)*8), float64(96-(pallete+1)*8))
-	} else if lrTurn > 0 && udTurn == 0 {
+	} else if lrTurn != 0 && udTurn == 0 {
+		// 左右反転
 		rect = pixel.R(float64(spriteNum*8), float64(64-pallete*8), float64((spriteNum+1)*8), float64(64-(pallete+1)*8))
 	} else {
+		// 上下左右反転
 		rect = pixel.R(float64(spriteNum*8), float64(32-pallete*8), float64((spriteNum+1)*8), float64(32-(pallete+1)*8))
 	}
 	return rect
