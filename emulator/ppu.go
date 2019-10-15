@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/jpeg"
+	"image/png"
 	"sync"
 
 	"github.com/faiface/pixel"
@@ -55,7 +55,7 @@ func (cpu *CPU) CacheBG() {
 						}
 
 						R, G, B := colors[cpu.PPU.RAM[0x3f00+p]][0], colors[cpu.PPU.RAM[0x3f00+p]][1], colors[cpu.PPU.RAM[0x3f00+p]][2]
-						img.Set((int)(sprite*8+int(x)), (int)(pallete*8+int(y)), color.RGBA{R, G, B, 0})
+						img.Set((int)(sprite*8+int(x)), (int)(pallete*8+int(y)), color.RGBA{R, G, B, 0xff})
 					}
 				}
 			}
@@ -66,8 +66,8 @@ func (cpu *CPU) CacheBG() {
 	wait.Wait()
 
 	buf := new(bytes.Buffer)
-	if err := jpeg.Encode(buf, img, &jpeg.Options{Quality: 100}); err != nil {
-		panic("error/jpeg")
+	if err := png.Encode(buf, img); err != nil {
+		panic("error/png")
 	}
 
 	tmp, _, _ := image.Decode(buf)
@@ -148,11 +148,14 @@ func (cpu *CPU) CacheSPR() {
 
 					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
 					// パレットミラーリング
+					var transparent uint8
 					if p == 0 || p == 4 || p == 8 || p == 12 {
-						p -= 0x10
+						transparent = 0
+					} else {
+						transparent = 255
 					}
 					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
-					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)), color.RGBA{R, G, B, 0})
+					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)), color.RGBA{R, G, B, transparent})
 				}
 			}
 
@@ -164,11 +167,14 @@ func (cpu *CPU) CacheSPR() {
 
 					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
 					// パレットミラーリング
+					var transparent uint8
 					if p == 0 || p == 4 || p == 8 || p == 12 {
-						p -= 0x10
+						transparent = 0
+					} else {
+						transparent = 255
 					}
 					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
-					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+32), color.RGBA{R, G, B, 0})
+					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+32), color.RGBA{R, G, B, transparent})
 				}
 			}
 
@@ -180,11 +186,14 @@ func (cpu *CPU) CacheSPR() {
 
 					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
 					// パレットミラーリング
+					var transparent uint8
 					if p == 0 || p == 4 || p == 8 || p == 12 {
-						p -= 0x10
+						transparent = 0
+					} else {
+						transparent = 255
 					}
 					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
-					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+64), color.RGBA{R, G, B, 0})
+					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+64), color.RGBA{R, G, B, transparent})
 				}
 			}
 
@@ -195,20 +204,24 @@ func (cpu *CPU) CacheSPR() {
 					color1 := (spriteBytes[15-h] & (0x01 << w) >> w) << 1
 
 					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
+
 					// パレットミラーリング
+					var transparent uint8
 					if p == 0 || p == 4 || p == 8 || p == 12 {
-						p -= 0x10
+						transparent = 0
+					} else {
+						transparent = 255
 					}
 					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
-					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+96), color.RGBA{R, G, B, 0})
+					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+96), color.RGBA{R, G, B, transparent})
 				}
 			}
 		}
 	}
 
 	buf := new(bytes.Buffer)
-	if err := jpeg.Encode(buf, img, &jpeg.Options{Quality: 100}); err != nil {
-		fmt.Println("error:jpeg\n", err)
+	if err := png.Encode(buf, img); err != nil {
+		fmt.Println("error:png", err)
 		return
 	}
 
