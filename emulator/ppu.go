@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
+	"sync"
 
 	"github.com/faiface/pixel"
 )
@@ -32,30 +33,37 @@ func (cpu *CPU) CacheBG() {
 
 	baseAddr := cpu.getBaseAddr("BG")
 
+	var wait sync.WaitGroup
+	wait.Add(256)
 	for sprite := 0; sprite < 256; sprite++ {
-		var spriteBytes [16]byte
-		for i := 0; i < 16; i++ {
-			spriteBytes[i] = cpu.PPU.RAM[baseAddr+uint(sprite)*16+uint(i)]
-		}
+		go func(sprite int) {
+			var spriteBytes [16]byte
+			for i := 0; i < 16; i++ {
+				spriteBytes[i] = cpu.PPU.RAM[baseAddr+uint(sprite)*16+uint(i)]
+			}
 
-		for pallete := 0; pallete < 4; pallete++ {
-			var x, y uint
-			for y = 0; y < 8; y++ {
-				for x = 0; x < 8; x++ {
-					color0 := (spriteBytes[y] & (0x01 << (7 - x))) >> (7 - x)
-					color1 := ((spriteBytes[y+8] & (0x01 << (7 - x))) >> (7 - x)) << 1
+			for pallete := 0; pallete < 4; pallete++ {
+				var x, y uint
+				for y = 0; y < 8; y++ {
+					for x = 0; x < 8; x++ {
+						color0 := (spriteBytes[y] & (0x01 << (7 - x))) >> (7 - x)
+						color1 := ((spriteBytes[y+8] & (0x01 << (7 - x))) >> (7 - x)) << 1
 
-					p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
-					if p%4 == 0 {
-						p = 0x10
+						p := uint(pallete*4) + uint(color0+color1) // パレット番号 + パレット内番号
+						if p%4 == 0 {
+							p = 0x10
+						}
+
+						R, G, B := colors[cpu.PPU.RAM[0x3f00+p]][0], colors[cpu.PPU.RAM[0x3f00+p]][1], colors[cpu.PPU.RAM[0x3f00+p]][2]
+						img.Set((int)(sprite*8+int(x)), (int)(pallete*8+int(y)), color.RGBA{R, G, B, 0})
 					}
-
-					R, G, B := colors[cpu.PPU.RAM[0x3f00+p]][0], colors[cpu.PPU.RAM[0x3f00+p]][1], colors[cpu.PPU.RAM[0x3f00+p]][2]
-					img.Set((int)(sprite*8+int(x)), (int)(pallete*8+int(y)), color.RGBA{R, G, B, 0})
 				}
 			}
-		}
+
+			wait.Done()
+		}(sprite)
 	}
+	wait.Wait()
 
 	buf := new(bytes.Buffer)
 	if err := jpeg.Encode(buf, img, &jpeg.Options{Quality: 100}); err != nil {
