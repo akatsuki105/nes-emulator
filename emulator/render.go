@@ -13,7 +13,7 @@ import (
 const (
 	width    = 256
 	height   = 240
-	overload = 8.3
+	overload = 12
 )
 
 var (
@@ -148,9 +148,11 @@ func (cpu *CPU) Render() {
 
 		win.Update()
 
-		if !cpu.PPU.BGPalleteOK {
-			cpu.CacheBG()
-			BGBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
+		if frames%15 == 0 {
+			if !cpu.PPU.BGPalleteOK {
+				cpu.CacheBG()
+				BGBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
+			}
 		}
 		if !cpu.PPU.SPRPalleteOK {
 			cpu.CacheSPR()
@@ -163,6 +165,14 @@ func (cpu *CPU) Render() {
 			fmt.Printf("%s | FPS: %d\n", cfg.Title, frames)
 			frames = 0
 		default:
+		}
+
+		// coredump
+		if win.Pressed(pixelgl.KeyQ) {
+			cpu.dump()
+		}
+		if win.Pressed(pixelgl.KeyW) {
+			cpu.load()
 		}
 	}
 }
