@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"io/ioutil"
+	"path/filepath"
 
 	"./emulator"
 	"github.com/faiface/pixel/pixelgl"
@@ -10,7 +11,7 @@ import (
 
 func main() {
 	flag.Parse()
-	bytes := readFile(flag.Arg(0))
+	bytes := readNES(flag.Arg(0))
 
 	cpu := &emulator.CPU{}
 	cpu.LoadROM(bytes)
@@ -20,9 +21,12 @@ func main() {
 	pixelgl.Run(cpu.Render)
 }
 
-func readFile(path string) []byte {
+func readNES(path string) []byte {
 	if path == "" {
 		panic("please enter nes file path")
+	}
+	if filepath.Ext(path) != ".nes" {
+		panic("please select .nes file")
 	}
 
 	bytes, err := ioutil.ReadFile(path)
