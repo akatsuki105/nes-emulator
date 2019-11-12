@@ -76,7 +76,7 @@ func (cpu *CPU) Render() {
 			spriteList = append(spriteList, [4]byte{pixelX, pixelY, spriteNum, attr})
 		}
 
-		// BG・SPR描画
+		// BG描画
 		BGBatch.Clear()
 		SPRBatch.Clear()
 		for y := 0; y < height/8; y++ {
@@ -87,13 +87,11 @@ func (cpu *CPU) Render() {
 				cpu.PPU.rasterX = 0
 			}
 
-			go func() {
-				for i := 0; i < 8; i++ {
-					for j := 0; j < int(math.Ceil(341/overload)); j++ {
-						cpu.exec()
-					}
+			for i := 0; i < 8; i++ {
+				for j := 0; j < int(math.Ceil(341/overload)); j++ {
+					cpu.exec()
 				}
-			}()
+			}
 
 			lineWait.Add(width / 8)
 
@@ -116,7 +114,7 @@ func (cpu *CPU) Render() {
 			lineWait.Wait()
 		}
 
-		// sprite 描画
+		// SPR描画
 		for _, sprite := range spriteList {
 			pixelX, pixelY, spriteNum, attr := sprite[0], sprite[1], sprite[2], sprite[3]
 			if attr&0x20 == 0 {
