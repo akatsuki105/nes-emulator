@@ -37,20 +37,17 @@ func (cpu *CPU) Render() {
 	cpu.PPU.BGBuf = cpu.PPU.newBGBuf
 	cpu.PPU.BGBufModified = false
 	BGBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
-	go func() {
-		for range time.Tick(time.Millisecond * 80) {
-			if cpu.PPU.BGPalleteModified {
-				cpu.CacheBG()
-			}
-		}
-	}()
 
 	cpu.CacheSPR()
 	cpu.PPU.SPRBuf = cpu.PPU.newSPRBuf
 	cpu.PPU.SPRBufModified = false
 	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
+
 	go func() {
 		for range time.Tick(time.Millisecond * 80) {
+			if cpu.PPU.BGPalleteModified {
+				cpu.CacheBG()
+			}
 			if cpu.PPU.SPRPalleteModified {
 				cpu.CacheSPR()
 			}
