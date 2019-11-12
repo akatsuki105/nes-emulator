@@ -558,7 +558,7 @@ func (cpu *CPU) LDA(addr uint16) {
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
 		if cpu.joypad1.ctr == 0 {
-			time.Sleep(time.Millisecond)
+			time.Sleep(time.Microsecond * 1500)
 		}
 		cpu.Reg.A = cpu.joypad1.cmd[cpu.joypad1.ctr]
 		if cpu.joypad1.ctr == 0 {
@@ -590,8 +590,13 @@ func (cpu *CPU) LDX(addr uint16) {
 		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
+		if cpu.joypad1.ctr == 0 {
+			time.Sleep(time.Microsecond * 1500)
+		}
 		cpu.Reg.X = cpu.joypad1.cmd[cpu.joypad1.ctr]
-		cpu.joypad1.ctr++
+		if cpu.joypad1.ctr == 0 {
+			time.Sleep(time.Millisecond)
+		}
 	default:
 		cpu.Reg.X = cpu.FetchMemory8(addr)
 	}
@@ -617,8 +622,13 @@ func (cpu *CPU) LDY(addr uint16) {
 		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
+		if cpu.joypad1.ctr == 0 {
+			time.Sleep(time.Microsecond * 1500)
+		}
 		cpu.Reg.Y = cpu.joypad1.cmd[cpu.joypad1.ctr]
-		cpu.joypad1.ctr++
+		if cpu.joypad1.ctr == 0 {
+			time.Sleep(time.Millisecond)
+		}
 	default:
 		cpu.Reg.Y = cpu.FetchMemory8(addr)
 	}
