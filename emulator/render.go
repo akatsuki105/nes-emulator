@@ -26,6 +26,7 @@ func (cpu *CPU) Render() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "nes-emulator",
 		Bounds: pixel.R(0, 0, width, height),
+		VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
@@ -33,10 +34,28 @@ func (cpu *CPU) Render() {
 	}
 
 	cpu.CacheBG()
+	cpu.PPU.BGBuf = cpu.PPU.newBGBuf
+	cpu.PPU.BGBufModified = false
 	BGBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
+	go func() {
+		for range time.Tick(time.Millisecond * 80) {
+			if !cpu.PPU.BGPalleteOK {
+				cpu.CacheBG()
+			}
+		}
+	}()
 
 	cpu.CacheSPR()
+	cpu.PPU.SPRBuf = cpu.PPU.newSPRBuf
+	cpu.PPU.SPRBufModified = false
 	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
+	go func() {
+		for range time.Tick(time.Millisecond * 80) {
+			if !cpu.PPU.SPRPalleteOK {
+				cpu.CacheSPR()
+			}
+		}
+	}()
 
 	go cpu.handleJoypad(win)
 
@@ -146,18 +165,18 @@ func (cpu *CPU) Render() {
 		BGBatch.Draw(win)
 		SPRBatch.Draw(win)
 
-		win.Update()
-
-		if frames%15 == 0 {
-			if !cpu.PPU.BGPalleteOK {
-				cpu.CacheBG()
-				BGBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
-			}
+		if cpu.PPU.BGBufModified {
+			cpu.PPU.BGBuf = cpu.PPU.newBGBuf
+			cpu.PPU.BGBufModified = false
+			BGBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
 		}
-		if !cpu.PPU.SPRPalleteOK {
-			cpu.CacheSPR()
+		if cpu.PPU.SPRBufModified {
+			cpu.PPU.SPRBuf = cpu.PPU.newSPRBuf
+			cpu.PPU.SPRBufModified = false
 			SPRBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 		}
+
+		win.Update()
 
 		frames++
 		select {

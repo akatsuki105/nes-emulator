@@ -13,18 +13,22 @@ import (
 
 // PPU Picture Processing Unit
 type PPU struct {
-	RAM          [0x4000]byte
-	sRAM         [0x100]byte // Sprite RAM
-	mirror       bool        // 0: 水平ミラー, 1:垂直ミラー
-	ptr          uint16      // PPURAMのポインタ 0x2006に書き込まれたとき更新される
-	ppudataBuf   byte        // PPUDATAからreadしたときのbuffer
-	scroll       [2]uint8    // (水平スクロールpixel, 垂直スクロールpixel)
-	scrollFlag   bool        // trueなら2回目として書き込みする
-	raster       uint16
-	BGBuf        *pixel.PictureData
-	BGPalleteOK  bool
-	SPRBuf       *pixel.PictureData
-	SPRPalleteOK bool
+	RAM            [0x4000]byte
+	sRAM           [0x100]byte // Sprite RAM
+	mirror         bool        // 0: 水平ミラー, 1:垂直ミラー
+	ptr            uint16      // PPURAMのポインタ 0x2006に書き込まれたとき更新される
+	ppudataBuf     byte        // PPUDATAからreadしたときのbuffer
+	scroll         [2]uint8    // (水平スクロールpixel, 垂直スクロールpixel)
+	scrollFlag     bool        // trueなら2回目として書き込みする
+	raster         uint16
+	BGBuf          *pixel.PictureData
+	newBGBuf       *pixel.PictureData
+	BGPalleteOK    bool
+	BGBufModified  bool
+	SPRBuf         *pixel.PictureData
+	newSPRBuf      *pixel.PictureData
+	SPRPalleteOK   bool
+	SPRBufModified bool
 }
 
 // CacheBG BGのデータをキャッシュする
@@ -72,7 +76,8 @@ func (cpu *CPU) CacheBG() {
 
 	tmp, _, _ := image.Decode(buf)
 	pic := pixel.PictureDataFromImage(tmp)
-	cpu.PPU.BGBuf = pic
+	cpu.PPU.newBGBuf = pic
+	cpu.PPU.BGBufModified = true
 	cpu.PPU.BGPalleteOK = true
 }
 
@@ -227,7 +232,8 @@ func (cpu *CPU) CacheSPR() {
 
 	tmp, _, _ := image.Decode(buf)
 	pic := pixel.PictureDataFromImage(tmp)
-	cpu.PPU.SPRBuf = pic
+	cpu.PPU.newSPRBuf = pic
+	cpu.PPU.SPRBufModified = true
 	cpu.PPU.SPRPalleteOK = true
 }
 
