@@ -39,7 +39,7 @@ func (cpu *CPU) Render() {
 	BGBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
 	go func() {
 		for range time.Tick(time.Millisecond * 80) {
-			if !cpu.PPU.BGPalleteOK {
+			if cpu.PPU.BGPalleteModified {
 				cpu.CacheBG()
 			}
 		}
@@ -51,7 +51,7 @@ func (cpu *CPU) Render() {
 	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 	go func() {
 		for range time.Tick(time.Millisecond * 80) {
-			if !cpu.PPU.SPRPalleteOK {
+			if cpu.PPU.SPRPalleteModified {
 				cpu.CacheSPR()
 			}
 		}
@@ -153,14 +153,16 @@ func (cpu *CPU) Render() {
 		cpu.setVBlank()
 		cpu.mutex.Unlock()
 
-		for i := 0; i < 22; i++ {
-			for j := 0; j < int(math.Ceil(341/overload)); j++ {
-				cpu.exec()
+		var wait sync.WaitGroup
+		wait.Add(1)
+		go func() {
+			for i := 0; i < 22; i++ {
+				for j := 0; j < int(math.Ceil(341/overload)); j++ {
+					cpu.exec()
+				}
 			}
-		}
-
-		cpu.RAM[0x2002] &= 0xbf // clear Raster
-		cpu.clearVBlank()
+			wait.Done()
+		}()
 
 		BGBatch.Draw(win)
 		SPRBatch.Draw(win)
@@ -193,5 +195,9 @@ func (cpu *CPU) Render() {
 		if win.Pressed(pixelgl.KeyW) {
 			cpu.load()
 		}
+
+		wait.Wait()
+		cpu.RAM[0x2002] &= 0xbf // clear Raster
+		cpu.clearVBlank()
 	}
 }

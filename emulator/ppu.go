@@ -13,22 +13,22 @@ import (
 
 // PPU Picture Processing Unit
 type PPU struct {
-	RAM            [0x4000]byte
-	sRAM           [0x100]byte // Sprite RAM
-	mirror         bool        // 0: 水平ミラー, 1:垂直ミラー
-	ptr            uint16      // PPURAMのポインタ 0x2006に書き込まれたとき更新される
-	ppudataBuf     byte        // PPUDATAからreadしたときのbuffer
-	scroll         [2]uint8    // (水平スクロールpixel, 垂直スクロールpixel)
-	scrollFlag     bool        // trueなら2回目として書き込みする
-	raster         uint16
-	BGBuf          *pixel.PictureData
-	newBGBuf       *pixel.PictureData
-	BGPalleteOK    bool
-	BGBufModified  bool
-	SPRBuf         *pixel.PictureData
-	newSPRBuf      *pixel.PictureData
-	SPRPalleteOK   bool
-	SPRBufModified bool
+	RAM                [0x4000]byte
+	sRAM               [0x100]byte // Sprite RAM
+	mirror             bool        // 0: 水平ミラー, 1:垂直ミラー
+	ptr                uint16      // PPURAMのポインタ 0x2006に書き込まれたとき更新される
+	ppudataBuf         byte        // PPUDATAからreadしたときのbuffer
+	scroll             [2]uint8    // (水平スクロールpixel, 垂直スクロールpixel)
+	scrollFlag         bool        // trueなら2回目として書き込みする
+	raster             uint16
+	BGBuf              *pixel.PictureData
+	newBGBuf           *pixel.PictureData
+	BGPalleteModified  bool
+	BGBufModified      bool
+	SPRBuf             *pixel.PictureData
+	newSPRBuf          *pixel.PictureData
+	SPRPalleteModified bool
+	SPRBufModified     bool
 }
 
 // CacheBG BGのデータをキャッシュする
@@ -78,7 +78,7 @@ func (cpu *CPU) CacheBG() {
 	pic := pixel.PictureDataFromImage(tmp)
 	cpu.PPU.newBGBuf = pic
 	cpu.PPU.BGBufModified = true
-	cpu.PPU.BGPalleteOK = true
+	cpu.PPU.BGPalleteModified = false
 }
 
 // outputBGRect 画面の(x,y)ブロックのRGBAの出力を行う
@@ -136,93 +136,99 @@ func (cpu *CPU) CacheSPR() {
 
 	baseAddr := cpu.getBaseAddr("SPR")
 
+	var wait sync.WaitGroup
+	wait.Add(256)
 	for sprite := 0; sprite < 256; sprite++ {
-		var spriteBytes [16]byte
-		for i := 0; i < 16; i++ {
-			spriteBytes[i] = cpu.PPU.RAM[baseAddr+uint(sprite)*16+uint(i)]
-		}
-
-		for pallete := 0; pallete < 4; pallete++ {
-			var w, h uint
-
-			// 反転無し
-			for h = 0; h < 8; h++ {
-				for w = 0; w < 8; w++ {
-					color0 := (spriteBytes[h] & (0x01 << (7 - w))) >> (7 - w)
-					color1 := ((spriteBytes[h+8] & (0x01 << (7 - w))) >> (7 - w)) << 1
-
-					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
-					// パレットミラーリング
-					var transparent uint8
-					if p == 0 || p == 4 || p == 8 || p == 12 {
-						transparent = 0
-					} else {
-						transparent = 255
-					}
-					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
-					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)), color.RGBA{R, G, B, transparent})
-				}
+		go func(sprite int) {
+			var spriteBytes [16]byte
+			for i := 0; i < 16; i++ {
+				spriteBytes[i] = cpu.PPU.RAM[baseAddr+uint(sprite)*16+uint(i)]
 			}
 
-			// 上下反転
-			for h = 0; h < 8; h++ {
-				for w = 0; w < 8; w++ {
-					color0 := (spriteBytes[7-h] & (0x01 << (7 - w))) >> (7 - w)
-					color1 := ((spriteBytes[15-h] & (0x01 << (7 - w))) >> (7 - w)) << 1
+			for pallete := 0; pallete < 4; pallete++ {
+				var w, h uint
 
-					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
-					// パレットミラーリング
-					var transparent uint8
-					if p == 0 || p == 4 || p == 8 || p == 12 {
-						transparent = 0
-					} else {
-						transparent = 255
+				// 反転無し
+				for h = 0; h < 8; h++ {
+					for w = 0; w < 8; w++ {
+						color0 := (spriteBytes[h] & (0x01 << (7 - w))) >> (7 - w)
+						color1 := ((spriteBytes[h+8] & (0x01 << (7 - w))) >> (7 - w)) << 1
+
+						p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
+						// パレットミラーリング
+						var transparent uint8
+						if p == 0 || p == 4 || p == 8 || p == 12 {
+							transparent = 0
+						} else {
+							transparent = 255
+						}
+						R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
+						img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)), color.RGBA{R, G, B, transparent})
 					}
-					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
-					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+32), color.RGBA{R, G, B, transparent})
+				}
+
+				// 上下反転
+				for h = 0; h < 8; h++ {
+					for w = 0; w < 8; w++ {
+						color0 := (spriteBytes[7-h] & (0x01 << (7 - w))) >> (7 - w)
+						color1 := ((spriteBytes[15-h] & (0x01 << (7 - w))) >> (7 - w)) << 1
+
+						p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
+						// パレットミラーリング
+						var transparent uint8
+						if p == 0 || p == 4 || p == 8 || p == 12 {
+							transparent = 0
+						} else {
+							transparent = 255
+						}
+						R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
+						img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+32), color.RGBA{R, G, B, transparent})
+					}
+				}
+
+				// 左右反転
+				for h = 0; h < 8; h++ {
+					for w = 0; w < 8; w++ {
+						color0 := (spriteBytes[h] & (0x01 << w)) >> w
+						color1 := (spriteBytes[h+8] & (0x01 << w) >> w) << 1
+
+						p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
+						// パレットミラーリング
+						var transparent uint8
+						if p == 0 || p == 4 || p == 8 || p == 12 {
+							transparent = 0
+						} else {
+							transparent = 255
+						}
+						R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
+						img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+64), color.RGBA{R, G, B, transparent})
+					}
+				}
+
+				// 上下左右反転
+				for h = 0; h < 8; h++ {
+					for w = 0; w < 8; w++ {
+						color0 := (spriteBytes[7-h] & (0x01 << w)) >> w
+						color1 := (spriteBytes[15-h] & (0x01 << w) >> w) << 1
+
+						p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
+
+						// パレットミラーリング
+						var transparent uint8
+						if p == 0 || p == 4 || p == 8 || p == 12 {
+							transparent = 0
+						} else {
+							transparent = 255
+						}
+						R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
+						img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+96), color.RGBA{R, G, B, transparent})
+					}
 				}
 			}
-
-			// 左右反転
-			for h = 0; h < 8; h++ {
-				for w = 0; w < 8; w++ {
-					color0 := (spriteBytes[h] & (0x01 << w)) >> w
-					color1 := (spriteBytes[h+8] & (0x01 << w) >> w) << 1
-
-					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
-					// パレットミラーリング
-					var transparent uint8
-					if p == 0 || p == 4 || p == 8 || p == 12 {
-						transparent = 0
-					} else {
-						transparent = 255
-					}
-					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
-					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+64), color.RGBA{R, G, B, transparent})
-				}
-			}
-
-			// 上下左右反転
-			for h = 0; h < 8; h++ {
-				for w = 0; w < 8; w++ {
-					color0 := (spriteBytes[7-h] & (0x01 << w)) >> w
-					color1 := (spriteBytes[15-h] & (0x01 << w) >> w) << 1
-
-					p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
-
-					// パレットミラーリング
-					var transparent uint8
-					if p == 0 || p == 4 || p == 8 || p == 12 {
-						transparent = 0
-					} else {
-						transparent = 255
-					}
-					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
-					img.Set((int)(sprite*8+int(w)), (int)(pallete*8+int(h)+96), color.RGBA{R, G, B, transparent})
-				}
-			}
-		}
+			wait.Done()
+		}(sprite)
 	}
+	wait.Wait()
 
 	buf := new(bytes.Buffer)
 	if err := png.Encode(buf, img); err != nil {
@@ -234,7 +240,7 @@ func (cpu *CPU) CacheSPR() {
 	pic := pixel.PictureDataFromImage(tmp)
 	cpu.PPU.newSPRBuf = pic
 	cpu.PPU.SPRBufModified = true
-	cpu.PPU.SPRPalleteOK = true
+	cpu.PPU.SPRPalleteModified = false
 }
 
 func (ppu *PPU) outputSpriteRect(spriteNum uint, attr byte) (rect pixel.Rect) {

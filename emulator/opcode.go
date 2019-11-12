@@ -756,9 +756,9 @@ func (cpu *CPU) setVRAM(value byte) {
 
 	cpu.PPU.RAM[cpu.PPU.ptr] = value
 	if cpu.PPU.ptr == 0x3f0f {
-		cpu.PPU.BGPalleteOK = false
+		cpu.PPU.BGPalleteModified = true
 	} else if cpu.PPU.ptr == 0x3f1f {
-		cpu.PPU.SPRPalleteOK = false
+		cpu.PPU.SPRPalleteModified = true
 	} else if !cpu.PPU.mirror && ((0x2000 <= cpu.PPU.ptr && cpu.PPU.ptr < 0x2400) || (0x2800 <= cpu.PPU.ptr && cpu.PPU.ptr < 0x2c00)) {
 		// 水平ミラー
 		cpu.PPU.RAM[cpu.PPU.ptr+0x0400] = value
