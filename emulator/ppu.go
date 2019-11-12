@@ -20,7 +20,8 @@ type PPU struct {
 	ppudataBuf         byte        // PPUDATAからreadしたときのbuffer
 	scroll             [2]uint8    // (水平スクロールpixel, 垂直スクロールpixel)
 	scrollFlag         bool        // trueなら2回目として書き込みする
-	raster             uint16
+	rasterX            uint16
+	rasterY            uint16
 	BGBuf              *pixel.PictureData
 	newBGBuf           *pixel.PictureData
 	BGPalleteModified  bool
