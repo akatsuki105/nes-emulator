@@ -3,7 +3,6 @@ package emulator
 import (
 	"fmt"
 	"sync"
-	"time"
 )
 
 // ==============================================  演算  ==============================================
@@ -557,13 +556,8 @@ func (cpu *CPU) LDA(addr uint16) {
 		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
-		if cpu.joypad1.ctr == 0 {
-			time.Sleep(time.Microsecond * 1500)
-		}
+		cpu.handleJoypad()
 		cpu.Reg.A = cpu.joypad1.cmd[cpu.joypad1.ctr]
-		if cpu.joypad1.ctr == 0 {
-			time.Sleep(time.Millisecond)
-		}
 		cpu.joypad1.ctr++
 	default:
 		cpu.Reg.A = cpu.FetchMemory8(addr)
@@ -590,13 +584,9 @@ func (cpu *CPU) LDX(addr uint16) {
 		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
-		if cpu.joypad1.ctr == 0 {
-			time.Sleep(time.Microsecond * 1500)
-		}
+		cpu.handleJoypad()
 		cpu.Reg.X = cpu.joypad1.cmd[cpu.joypad1.ctr]
-		if cpu.joypad1.ctr == 0 {
-			time.Sleep(time.Millisecond)
-		}
+		cpu.joypad1.ctr++
 	default:
 		cpu.Reg.X = cpu.FetchMemory8(addr)
 	}
@@ -622,13 +612,9 @@ func (cpu *CPU) LDY(addr uint16) {
 		}
 		cpu.PPU.ptr += cpu.getVRAMDelta()
 	case joypad1:
-		if cpu.joypad1.ctr == 0 {
-			time.Sleep(time.Microsecond * 1500)
-		}
+		cpu.handleJoypad()
 		cpu.Reg.Y = cpu.joypad1.cmd[cpu.joypad1.ctr]
-		if cpu.joypad1.ctr == 0 {
-			time.Sleep(time.Millisecond)
-		}
+		cpu.joypad1.ctr++
 	default:
 		cpu.Reg.Y = cpu.FetchMemory8(addr)
 	}
@@ -668,7 +654,6 @@ func (cpu *CPU) STA(addr uint16) {
 		}
 		wait.Wait()
 	case joypad1:
-		time.Sleep(time.Millisecond)
 		cpu.joypad1.ctr = 0
 		for i := 0; i < 8; i++ {
 			cpu.joypad1.cmd[i] = 0
@@ -706,7 +691,6 @@ func (cpu *CPU) STX(addr uint16) {
 		}
 		wait.Wait()
 	case joypad1:
-		time.Sleep(time.Millisecond)
 		cpu.joypad1.ctr = 0
 		for i := 0; i < 8; i++ {
 			cpu.joypad1.cmd[i] = 0
@@ -744,7 +728,6 @@ func (cpu *CPU) STY(addr uint16) {
 		}
 		wait.Wait()
 	case joypad1:
-		time.Sleep(time.Millisecond)
 		cpu.joypad1.ctr = 0
 		for i := 0; i < 8; i++ {
 			cpu.joypad1.cmd[i] = 0

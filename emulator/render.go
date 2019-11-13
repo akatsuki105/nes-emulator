@@ -54,7 +54,8 @@ func (cpu *CPU) Render() {
 		}
 	}()
 
-	go cpu.handleJoypad(win)
+	cpu.win = win
+	go cpu.handleJoypad()
 
 	var (
 		frames = 0
@@ -64,8 +65,7 @@ func (cpu *CPU) Render() {
 
 	for !win.Closed() {
 		// SPR探索
-		var pixel2sprite map[uint16]([3]byte)
-		pixel2sprite = map[uint16]([3]byte){}
+		var spriteList [][4]byte
 		for i := 0; i < 64; i++ {
 			pixelX, pixelY := cpu.PPU.sRAM[i*4+3], (cpu.PPU.sRAM[i*4])+1
 			spriteNum := cpu.PPU.sRAM[i*4+1]
@@ -74,7 +74,7 @@ func (cpu *CPU) Render() {
 			if i == 0 {
 				cpu.PPU.raster = uint16(pixelY)
 			}
-			pixel2sprite[(uint16(pixelY)<<8)|uint16(pixelX)] = [3]byte{spriteNum, attr, byte(i)}
+			spriteList = append(spriteList, [4]byte{pixelX, pixelY, spriteNum, attr})
 		}
 
 		// BG・SPR描画
@@ -88,42 +88,16 @@ func (cpu *CPU) Render() {
 				cpu.PPU.raster = 0
 			}
 
-			go func() {
-				for i := 0; i < 8; i++ {
-					for j := 0; j < int(math.Ceil(341/overload)); j++ {
-						cpu.exec()
-					}
+			for i := 0; i < 8; i++ {
+				for j := 0; j < int(math.Ceil(341/overload)); j++ {
+					cpu.exec()
 				}
-			}()
+			}
 
 			lineWait.Add(width / 8)
 
 			for x := 0; x < width/8; x++ {
 				go func(x, y int) {
-					// sprite 描画
-					var spriteWait sync.WaitGroup
-					spriteWait.Add(64)
-					for i := 0; i < 64; i++ {
-						go func(i int) {
-							indexX, indexY := i%8, i/8
-							sprite, ok := pixel2sprite[(uint16(y*8+indexY)<<8)|uint16(x*8+indexX)]
-							if ok {
-								spriteNum, attr := sprite[0], sprite[1]
-
-								if attr&0x20 == 0 {
-									rect := cpu.PPU.outputSpriteRect(uint(spriteNum), attr)
-									SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
-									matrix := pixel.IM.Moved(pixel.V(float64(x*8+indexX+4), float64(height-y*8-indexY-4)))
-									lineMutex.Lock()
-									SPRSprite.Draw(SPRBatch, matrix)
-									lineMutex.Unlock()
-								}
-							}
-							spriteWait.Done()
-						}(i)
-					}
-					spriteWait.Wait()
-
 					// BG描画
 					scrollPixelX, scrollPixelY := cpu.PPU.scroll[0], cpu.PPU.scroll[1]
 					mainScreen := cpu.RAM[0x2000] & 0x03
@@ -139,6 +113,17 @@ func (cpu *CPU) Render() {
 				}(x, y)
 			}
 			lineWait.Wait()
+		}
+
+		// sprite 描画
+		for _, sprite := range spriteList {
+			pixelX, pixelY, spriteNum, attr := sprite[0], sprite[1], sprite[2], sprite[3]
+			if attr&0x20 == 0 {
+				rect := cpu.PPU.outputSpriteRect(uint(spriteNum), attr)
+				SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
+				matrix := pixel.IM.Moved(pixel.V(float64(pixelX+4), float64(height-pixelY-3)))
+				SPRSprite.Draw(SPRBatch, matrix)
+			}
 		}
 
 		cpu.mutex.Lock()

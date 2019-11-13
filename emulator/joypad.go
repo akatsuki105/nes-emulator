@@ -2,7 +2,6 @@ package emulator
 
 import (
 	"sync"
-	"time"
 
 	"github.com/faiface/pixel/pixelgl"
 )
@@ -25,18 +24,16 @@ var keyList = [8]pixelgl.Button{
 }
 
 // handleJoypad キー入力とジョイパッド入力の橋渡しを行う 今回は1Pのみ
-func (cpu *CPU) handleJoypad(win *pixelgl.Window) {
+func (cpu *CPU) handleJoypad() {
 	var wait sync.WaitGroup
-	for range time.Tick(time.Millisecond) {
-		wait.Add(8)
-		for i, key := range keyList {
-			go func(i int, key pixelgl.Button) {
-				if win.Pressed(key) {
-					cpu.joypad1.cmd[i] = 1
-				}
-				wait.Done()
-			}(i, key)
-		}
-		wait.Wait()
+	wait.Add(8)
+	for i, key := range keyList {
+		go func(i int, key pixelgl.Button) {
+			if cpu.win.Pressed(key) {
+				cpu.joypad1.cmd[i] = 1
+			}
+			wait.Done()
+		}(i, key)
 	}
+	wait.Wait()
 }

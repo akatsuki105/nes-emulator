@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+
+	"github.com/faiface/pixel/pixelgl"
 )
 
 var (
@@ -31,6 +33,7 @@ type CPU struct {
 	joypad1 Joypad
 	mutex   sync.Mutex
 	history []string
+	win     *pixelgl.Window
 }
 
 // InitReg レジスタの初期化
