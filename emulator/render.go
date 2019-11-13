@@ -44,7 +44,7 @@ func (cpu *CPU) Render() {
 	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
 
 	go func() {
-		for range time.Tick(time.Millisecond * 80) {
+		for range time.Tick(time.Millisecond * 100) {
 			if cpu.PPU.BGPalleteModified {
 				cpu.CacheBG()
 			}
@@ -59,6 +59,7 @@ func (cpu *CPU) Render() {
 	var (
 		frames = 0
 		second = time.Tick(time.Second)
+		ctr    = 0
 	)
 
 	for !win.Closed() {
@@ -176,6 +177,15 @@ func (cpu *CPU) Render() {
 		case <-second:
 			fmt.Printf("%s | FPS: %d\n", cfg.Title, frames)
 			frames = 0
+
+			ctr++
+			if ctr == 1 && !cpu.PPU.BGPalleteModified {
+				cpu.PPU.BGPalleteModified = true
+			} else if ctr == 2 && !cpu.PPU.SPRPalleteModified {
+				cpu.PPU.SPRPalleteModified = true
+			} else if ctr == 3 {
+				ctr = 0
+			}
 		default:
 		}
 
