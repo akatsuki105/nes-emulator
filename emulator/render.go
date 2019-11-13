@@ -80,39 +80,39 @@ func (cpu *CPU) Render() {
 		// BG・SPR描画
 		BGBatch.Clear()
 		SPRBatch.Clear()
-		for y := 0; y < height/8; y++ {
+		for y := 0; y < height; y++ {
 
 			// ラスタースクロール
-			if cpu.PPU.raster != 0 && (uint16(y*8) >= cpu.PPU.raster) {
+			if cpu.PPU.raster != 0 && (uint16(y) == cpu.PPU.raster) {
 				cpu.spriteZeroHit(cpu.PPU.raster)
 				cpu.PPU.raster = 0
 			}
 
-			for i := 0; i < 8; i++ {
-				for j := 0; j < int(math.Ceil(341/overload)); j++ {
-					cpu.exec()
+			for j := 0; j < int(math.Ceil(341/overload)); j++ {
+				cpu.exec()
+			}
+
+			if y%8 == 0 {
+				lineWait.Add(width / 8)
+
+				for x := 0; x < width/8; x++ {
+					go func(x, y int) {
+						// BG描画
+						scrollPixelX, scrollPixelY := cpu.PPU.scroll[0], cpu.PPU.scroll[1]
+						mainScreen := cpu.RAM[0x2000] & 0x03
+						rect := cpu.PPU.outputBGRect(uint(x), uint(y/8), uint(scrollPixelX), uint(scrollPixelY), mainScreen)
+						BGSprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
+						matrix := pixel.IM.Moved(pixel.V(float64(uint8(x*8)-(scrollPixelX%8)+4), float64(uint8(height-y)+(scrollPixelY%8)-4)))
+
+						lineMutex.Lock()
+						BGSprite.Draw(BGBatch, matrix)
+						lineMutex.Unlock()
+
+						lineWait.Done()
+					}(x, y)
 				}
+				lineWait.Wait()
 			}
-
-			lineWait.Add(width / 8)
-
-			for x := 0; x < width/8; x++ {
-				go func(x, y int) {
-					// BG描画
-					scrollPixelX, scrollPixelY := cpu.PPU.scroll[0], cpu.PPU.scroll[1]
-					mainScreen := cpu.RAM[0x2000] & 0x03
-					rect := cpu.PPU.outputBGRect(uint(x), uint(y), uint(scrollPixelX), uint(scrollPixelY), mainScreen)
-					BGSprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
-					matrix := pixel.IM.Moved(pixel.V(float64(uint8(x*8)-(scrollPixelX%8)+4), float64(uint8(height-y*8)+(scrollPixelY%8)-4)))
-
-					lineMutex.Lock()
-					BGSprite.Draw(BGBatch, matrix)
-					lineMutex.Unlock()
-
-					lineWait.Done()
-				}(x, y)
-			}
-			lineWait.Wait()
 		}
 
 		// sprite 描画
