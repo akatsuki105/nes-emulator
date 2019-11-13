@@ -175,10 +175,10 @@ func (cpu *CPU) Render() {
 		}
 
 		// coredump
-		if win.Pressed(pixelgl.KeyQ) {
+		if win.Pressed(pixelgl.KeyD) && win.Pressed(pixelgl.KeyS) {
 			cpu.dump()
 		}
-		if win.Pressed(pixelgl.KeyW) {
+		if win.Pressed(pixelgl.KeyL) {
 			cpu.load()
 		}
 
