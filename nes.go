@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"./emulator"
+	"nes-emulator/emulator"
 	"github.com/faiface/pixel/pixelgl"
 )
 
