@@ -1,5 +1,7 @@
 # nes-emulator
 
+[![Build Status](https://travis-ci.com/Akatsuki-py/nes-emulator.svg?branch=master)](https://travis-ci.com/Akatsuki-py/nes-emulator)
+
 ![demo](https://imgur.com/UgsUTv6.gif, "Demo")
 
 ## abstract
