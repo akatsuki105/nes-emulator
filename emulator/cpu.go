@@ -2,6 +2,7 @@ package emulator
 
 import (
 	"fmt"
+	"image"
 	"os"
 	"os/signal"
 	"sync"
@@ -44,6 +45,8 @@ func (cpu *CPU) InitReg() {
 	lower := uint16(cpu.FetchMemory8(0xfffc))
 	upper := uint16(cpu.FetchMemory8(0xfffd))
 	cpu.Reg.PC = (upper << 8) | lower
+
+	cpu.PPU.displayImage = image.NewRGBA(image.Rect(0, 0, 256, 240))
 }
 
 // LoadROM ROMのバイトデータからプログラムROMとページROMを取り出してRAMにロードする

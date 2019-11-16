@@ -33,34 +33,12 @@ func (cpu *CPU) Render() {
 		panic(err)
 	}
 
-	cpu.CacheBG()
-	cpu.PPU.BGBuf = cpu.PPU.newBGBuf
-	cpu.PPU.BGBufModified = false
-	BGBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
-
-	cpu.CacheSPR()
-	cpu.PPU.SPRBuf = cpu.PPU.newSPRBuf
-	cpu.PPU.SPRBufModified = false
-	SPRBatch := pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
-
-	go func() {
-		for range time.Tick(time.Millisecond * 100) {
-			if cpu.PPU.BGPalleteModified {
-				cpu.CacheBG()
-			}
-			if cpu.PPU.SPRPalleteModified {
-				cpu.CacheSPR()
-			}
-		}
-	}()
-
 	cpu.win = win
 	go cpu.handleJoypad()
 
 	var (
 		frames = 0
 		second = time.Tick(time.Second)
-		ctr    = 0
 	)
 
 	for !win.Closed() {
@@ -78,8 +56,6 @@ func (cpu *CPU) Render() {
 		}
 
 		// BG・SPR描画
-		BGBatch.Clear()
-		SPRBatch.Clear()
 		for y := 0; y < height; y++ {
 
 			// ラスタースクロール
@@ -100,29 +76,13 @@ func (cpu *CPU) Render() {
 						// BG描画
 						scrollPixelX, scrollPixelY := cpu.PPU.scroll[0], cpu.PPU.scroll[1]
 						mainScreen := cpu.RAM[0x2000] & 0x03
-						rect := cpu.PPU.outputBGRect(uint(x), uint(y/8), uint(scrollPixelX), uint(scrollPixelY), mainScreen)
-						BGSprite := pixel.NewSprite(cpu.PPU.BGBuf, rect)
-						matrix := pixel.IM.Moved(pixel.V(float64(uint8(x*8)-(scrollPixelX%8)+4), float64(uint8(height-y)+(scrollPixelY%8)-4)))
 
-						lineMutex.Lock()
-						BGSprite.Draw(BGBatch, matrix)
-						lineMutex.Unlock()
+						cpu.setBGTile(uint(x), uint(y/8), uint(scrollPixelX), uint(scrollPixelY), mainScreen)
 
 						lineWait.Done()
 					}(x, y)
 				}
 				lineWait.Wait()
-			}
-		}
-
-		// sprite 描画
-		for _, sprite := range spriteList {
-			pixelX, pixelY, spriteNum, attr := sprite[0], sprite[1], sprite[2], sprite[3]
-			if attr&0x20 == 0 {
-				rect := cpu.PPU.outputSpriteRect(uint(spriteNum), attr)
-				SPRSprite := pixel.NewSprite(cpu.PPU.SPRBuf, rect)
-				matrix := pixel.IM.Moved(pixel.V(float64(pixelX+4), float64(height-pixelY-3)))
-				SPRSprite.Draw(SPRBatch, matrix)
 			}
 		}
 
@@ -141,19 +101,10 @@ func (cpu *CPU) Render() {
 			wait.Done()
 		}()
 
-		BGBatch.Draw(win)
-		SPRBatch.Draw(win)
-
-		if cpu.PPU.BGBufModified {
-			cpu.PPU.BGBuf = cpu.PPU.newBGBuf
-			cpu.PPU.BGBufModified = false
-			BGBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.BGBuf)
-		}
-		if cpu.PPU.SPRBufModified {
-			cpu.PPU.SPRBuf = cpu.PPU.newSPRBuf
-			cpu.PPU.SPRBufModified = false
-			SPRBatch = pixel.NewBatch(&pixel.TrianglesData{}, cpu.PPU.SPRBuf)
-		}
+		pic := pixel.PictureDataFromImage(cpu.PPU.displayImage)
+		matrix := pixel.IM.Moved(win.Bounds().Center())
+		sprite := pixel.NewSprite(pic, pic.Bounds())
+		sprite.Draw(win, matrix)
 
 		win.Update()
 
@@ -162,15 +113,6 @@ func (cpu *CPU) Render() {
 		case <-second:
 			fmt.Printf("%s | FPS: %d\n", cfg.Title, frames)
 			frames = 0
-
-			ctr++
-			if ctr == 1 && !cpu.PPU.BGPalleteModified {
-				cpu.PPU.BGPalleteModified = true
-			} else if ctr == 2 && !cpu.PPU.SPRPalleteModified {
-				cpu.PPU.SPRPalleteModified = true
-			} else if ctr == 3 {
-				ctr = 0
-			}
 		default:
 		}
 

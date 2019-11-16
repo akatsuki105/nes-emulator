@@ -745,10 +745,10 @@ func (cpu *CPU) setVRAM(value byte) {
 	}
 
 	cpu.PPU.RAM[cpu.PPU.ptr] = value
-	if cpu.PPU.ptr == 0x3f0f {
-		cpu.PPU.BGPalleteModified = true
-	} else if cpu.PPU.ptr == 0x3f1f {
-		cpu.PPU.SPRPalleteModified = true
+	if cpu.PPU.ptr == 0x3f00 || cpu.PPU.ptr == 0x3f04 || cpu.PPU.ptr == 0x3f08 || cpu.PPU.ptr == 0x3f0c {
+		cpu.PPU.RAM[cpu.PPU.ptr+0x10] = value
+	} else if cpu.PPU.ptr == 0x3f10 || cpu.PPU.ptr == 0x3f14 || cpu.PPU.ptr == 0x3f18 || cpu.PPU.ptr == 0x3f1c {
+		cpu.PPU.RAM[cpu.PPU.ptr-0x10] = value
 	} else if !cpu.PPU.mirror && ((0x2000 <= cpu.PPU.ptr && cpu.PPU.ptr < 0x2400) || (0x2800 <= cpu.PPU.ptr && cpu.PPU.ptr < 0x2c00)) {
 		// 水平ミラー
 		cpu.PPU.RAM[cpu.PPU.ptr+0x0400] = value
