@@ -37,11 +37,21 @@ func (cpu *CPU) Render() {
 	go cpu.handleJoypad()
 
 	var (
-		frames = 0
-		second = time.Tick(time.Second)
+		frames   = 0
+		second   = time.Tick(time.Second)
+		expanded = uint(1) // 画面拡大率
 	)
 
 	for !win.Closed() {
+		backgroundRender := false
+		spriteRender := false
+		if cpu.RAM[0x2001]&0x08 != 0 {
+			backgroundRender = true
+		}
+		if cpu.RAM[0x2001]&0x10 != 0 {
+			spriteRender = true
+		}
+
 		// SPR探索
 		var spriteList [][4]byte
 		for i := 0; i < 64; i++ {
@@ -77,12 +87,24 @@ func (cpu *CPU) Render() {
 						scrollPixelX, scrollPixelY := cpu.PPU.scroll[0], cpu.PPU.scroll[1]
 						mainScreen := cpu.RAM[0x2000] & 0x03
 
-						cpu.setBGTile(uint(x), uint(y/8), uint(scrollPixelX), uint(scrollPixelY), mainScreen)
+						if backgroundRender {
+							cpu.setBGTile(uint(x), uint(y/8), uint(scrollPixelX), uint(scrollPixelY), mainScreen)
+						}
 
 						lineWait.Done()
 					}(x, y)
 				}
 				lineWait.Wait()
+			}
+		}
+
+		// sprite 描画
+		for _, sprite := range spriteList {
+			pixelX, pixelY, spriteNum, attr := sprite[0], sprite[1], sprite[2], sprite[3]
+			if attr&0x20 == 0 {
+				if spriteRender {
+					cpu.setSPRTile(pixelX, pixelY, spriteNum, attr)
+				}
 			}
 		}
 
@@ -103,6 +125,7 @@ func (cpu *CPU) Render() {
 
 		pic := pixel.PictureDataFromImage(cpu.PPU.displayImage)
 		matrix := pixel.IM.Moved(win.Bounds().Center())
+		matrix = matrix.ScaledXY(win.Bounds().Center(), pixel.V(float64(expanded), float64(expanded)))
 		sprite := pixel.NewSprite(pic, pic.Bounds())
 		sprite.Draw(win, matrix)
 
@@ -122,6 +145,19 @@ func (cpu *CPU) Render() {
 		}
 		if win.Pressed(pixelgl.KeyL) {
 			cpu.load()
+		}
+		// resize window
+		if win.Pressed(pixelgl.KeyE) {
+			expanded *= 2
+			time.Sleep(time.Millisecond * 400)
+			win.SetBounds(pixel.R(0, 0, float64(width*expanded), float64(height*expanded)))
+		}
+		if win.Pressed(pixelgl.KeyR) {
+			if expanded >= 2 {
+				expanded /= 2
+				time.Sleep(time.Millisecond * 400)
+				win.SetBounds(pixel.R(0, 0, float64(width*expanded), float64(height*expanded)))
+			}
 		}
 
 		wait.Wait()

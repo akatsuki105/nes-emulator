@@ -3,28 +3,22 @@ package emulator
 import (
 	"image"
 	"image/color"
-
-	"github.com/faiface/pixel"
 )
 
 // PPU Picture Processing Unit
 type PPU struct {
-	RAM                [0x4000]byte
-	sRAM               [0x100]byte // Sprite RAM
-	mirror             bool        // 0: 水平ミラー, 1:垂直ミラー
-	ptr                uint16      // PPURAMのポインタ 0x2006に書き込まれたとき更新される
-	ppudataBuf         byte        // PPUDATAからreadしたときのbuffer
-	scroll             [2]uint8    // (水平スクロールpixel, 垂直スクロールpixel)
-	scrollFlag         bool        // trueなら2回目として書き込みする
-	raster             uint16
-	SPRBuf             *pixel.PictureData
-	newSPRBuf          *pixel.PictureData
-	SPRPalleteModified bool
-	SPRBufModified     bool
-	displayImage       *image.RGBA // 256*256のイメージデータ
+	RAM          [0x4000]byte
+	sRAM         [0x100]byte // Sprite RAM
+	mirror       bool        // 0: 水平ミラー, 1:垂直ミラー
+	ptr          uint16      // PPURAMのポインタ 0x2006に書き込まれたとき更新される
+	ppudataBuf   byte        // PPUDATAからreadしたときのbuffer
+	scroll       [2]uint8    // (水平スクロールpixel, 垂直スクロールpixel)
+	scrollFlag   bool        // trueなら2回目として書き込みする
+	raster       uint16
+	displayImage *image.RGBA // 256*256のイメージデータ
 }
 
-// outputBGRect 画面の(x,y)ブロックのRGBAの出力を行う
+// setBGTile 画面の(x,y)ブロックのRGBAの出力を行う
 func (cpu *CPU) setBGTile(x, y, scrollPixelX, scrollPixelY uint, mainScreen byte) {
 	var spriteNum uint
 	var attr byte
@@ -90,6 +84,117 @@ func (cpu *CPU) setBGTile(x, y, scrollPixelX, scrollPixelY uint, mainScreen byte
 			pixelX := int(x*8 + uint(column) - (scrollPixelX % 8))
 			pixelY := int(y*8 + uint(row) - (scrollPixelY % 8))
 			cpu.PPU.displayImage.Set(pixelX, pixelY, color.RGBA{R, G, B, 0xff})
+		}
+	}
+}
+
+// setSPRTile
+func (cpu *CPU) setSPRTile(pixelX, pixelY, spriteNum, attr byte) {
+	pallete := attr & 0x03 // パレット番号
+	lrTurn := attr & 0x40  // 左右反転
+	udTurn := attr & 0x80  // 上下反転
+
+	baseAddr := cpu.getBaseAddr("SPR")
+	var spriteBytes [16]byte
+	for i := 0; i < 16; i++ {
+		spriteBytes[i] = cpu.PPU.RAM[baseAddr+uint(spriteNum)*16+uint(i)]
+	}
+
+	if lrTurn != 0 && udTurn != 0 {
+		// 上下左右反転
+		for h := 0; h < 8; h++ {
+			for w := 0; w < 8; w++ {
+				color0 := (spriteBytes[7-h] & (0x01 << w)) >> w
+				color1 := (spriteBytes[15-h] & (0x01 << w) >> w) << 1
+
+				p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
+
+				// パレットミラーリング
+				isTransparent := false
+				if p == 0 || p == 4 || p == 8 || p == 12 {
+					isTransparent = true
+				}
+
+				if !isTransparent {
+					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
+					x := int(pixelX) + w
+					y := int(pixelY) + h
+					c := color.RGBA{R, G, B, 0xff}
+					cpu.PPU.displayImage.Set(x, y, c)
+				}
+			}
+		}
+	} else if lrTurn == 0 && udTurn != 0 {
+		// 上下反転
+		for h := 0; h < 8; h++ {
+			for w := 0; w < 8; w++ {
+				color0 := (spriteBytes[7-h] & (0x01 << (7 - w))) >> (7 - w)
+				color1 := ((spriteBytes[15-h] & (0x01 << (7 - w))) >> (7 - w)) << 1
+
+				p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
+
+				// パレットミラーリング
+				isTransparent := false
+				if p == 0 || p == 4 || p == 8 || p == 12 {
+					isTransparent = true
+				}
+
+				if !isTransparent {
+					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
+					x := int(pixelX) + w
+					y := int(pixelY) + h
+					c := color.RGBA{R, G, B, 0xff}
+					cpu.PPU.displayImage.Set(x, y, c)
+				}
+			}
+		}
+	} else if lrTurn != 0 && udTurn == 0 {
+		// 左右反転
+		for h := 0; h < 8; h++ {
+			for w := 0; w < 8; w++ {
+				color0 := (spriteBytes[h] & (0x01 << w)) >> w
+				color1 := (spriteBytes[h+8] & (0x01 << w) >> w) << 1
+
+				p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
+
+				// パレットミラーリング
+				isTransparent := false
+				if p == 0 || p == 4 || p == 8 || p == 12 {
+					isTransparent = true
+				}
+
+				if !isTransparent {
+					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
+					x := int(pixelX) + w
+					y := int(pixelY) + h
+					c := color.RGBA{R, G, B, 0xff}
+					cpu.PPU.displayImage.Set(x, y, c)
+				}
+			}
+		}
+	} else {
+		// 反転無し
+		for h := 0; h < 8; h++ {
+			for w := 0; w < 8; w++ {
+				color0 := (spriteBytes[h] & (0x01 << (7 - w))) >> (7 - w)
+				color1 := ((spriteBytes[h+8] & (0x01 << (7 - w))) >> (7 - w)) << 1
+
+				p := int(pallete*4) + int(color0+color1) // パレット番号 + パレット内番号
+
+				// パレットミラーリング
+				isTransparent := false
+				if p == 0 || p == 4 || p == 8 || p == 12 {
+					isTransparent = true
+				}
+
+				if !isTransparent {
+					R, G, B := colors[cpu.PPU.RAM[0x3f10+p]][0], colors[cpu.PPU.RAM[0x3f10+p]][1], colors[cpu.PPU.RAM[0x3f10+p]][2]
+					x := int(pixelX) + w
+					y := int(pixelY) + h
+					c := color.RGBA{R, G, B, 0xff}
+					cpu.PPU.displayImage.Set(x, y, c)
+				}
+			}
 		}
 	}
 }
