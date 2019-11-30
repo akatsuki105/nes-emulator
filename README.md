@@ -21,4 +21,4 @@
 go run nes.go
 ```
 
-I want you to know [GameBoy emulator](https://github.com/Akatsuki-py/gameboy).
+I want you to know [GameBoy emulator](https://github.com/Akatsuki-py/Worldwide).
